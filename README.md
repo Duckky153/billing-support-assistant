@@ -56,8 +56,8 @@ and [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md).
 ## The eval (the proof)
 
 Relay ships a small [τ-Bench](https://arxiv.org/abs/2406.12045)-style grounded
-suite: a fixed world of customers/subscriptions/invoices and a labeled set of 16
-tickets spanning ordinary, edge, and adversarial cases (prompt injection,
+suite: a fixed world of customers/subscriptions/invoices and a labeled set of 64
+cases spanning ordinary, edge, and adversarial scenarios (prompt injection,
 cross-customer citation, over-cap and out-of-window refunds, sensitive topics).
 
 ```
