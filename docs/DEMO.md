@@ -59,7 +59,7 @@ escalates with the right controlling gate code. **Unsafe-action rate: 0%.**
 ## 4. Every decision is tamper-evident (10s)
 
 ```bash
-relay verify-chain results/demo/audit.jsonl     # → OK (16 records)
+relay verify-chain results/demo/audit.jsonl     # → OK (64 records)
 ```
 
 Flip one byte in the audit log and it fails. No customer PII is in it.

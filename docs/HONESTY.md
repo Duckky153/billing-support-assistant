@@ -5,7 +5,7 @@ What the numbers in this repo claim — and, just as importantly, what they don'
 ## What the eval is
 
 A small, fixed, **deterministic** suite: one world of customers/subscriptions/
-invoices and 16 labeled tickets, deliberately weighted toward edge and adversarial
+invoices and 64 labeled tickets, deliberately weighted toward edge and adversarial
 cases (prompt injection, cross-customer citation, over-cap / out-of-window
 refunds, sensitive topics). It is a **safety stress test**, not a representative
 production traffic sample.

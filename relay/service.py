@@ -69,8 +69,8 @@ curl -s $URL/tickets -H 'content-type: application/json' \\
     Demo customers: <code>cus_ada</code> <code>cus_bob</code> <code>cus_carol</code>
     <code>cus_dave</code> <code>cus_erin</code>.
   </div>
-  <p class="sub">Eval scoreboard: <a href="https://fetchrn.github.io/relay/">fetchrn.github.io/relay</a>
-  · Source: <a href="https://github.com/fetchrn/relay">github.com/fetchrn/relay</a>
+  <p class="sub">Eval scoreboard: <a href="https://duckky153.github.io/relay/">duckky153.github.io/relay</a>
+  · Source: <a href="https://github.com/Duckky153/relay">github.com/Duckky153/relay</a>
   · Health: <a href="/healthz">/healthz</a></p>
 </div></body></html>"""
 

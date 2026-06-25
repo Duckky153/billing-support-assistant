@@ -40,7 +40,7 @@ Following Sierra's framing, reliability is presented as a measured property with
 guaranteed floor, not as perfection:
 
 - **Action layer:** guaranteed. The gates make an unsafe *action* impossible by
-  construction; the eval confirms 0/16 on the reference suite.
+  construction; the eval confirms 0/64 on the reference suite.
 - **Output layer:** best-effort. Answer text is gated on confidence and topic
   sensitivity but is not guaranteed correct. A production deployment adds an
   output classifier and human review on the long tail.

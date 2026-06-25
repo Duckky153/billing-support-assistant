@@ -22,7 +22,9 @@ from relay.eval.report import EvalReport
 
 
 def _brain(name: str) -> Brain:
-    return ClaudeBrain() if name == "claude" else MockBrain()
+    if name == "claude":
+        return ClaudeBrain()
+    return MockBrain()
 
 
 def _cmd_eval(args: argparse.Namespace) -> int:
