@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 Guidance for AI coding tools working in this repo.
 
