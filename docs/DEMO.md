@@ -14,8 +14,8 @@ pip install -e ".[dev,service]"
 relay run "I was charged twice this week, can you refund me?" --customer cus_ada
 ```
 
-→ `outcome: resolved`, `gate_code: refund_ok`, `executed: true`. A real refund of
-the customer's actual recent invoice, within the policy cap and window.
+→ `outcome: resolved`, `gate_code: refund_ok`, `executed: true`. The synthetic
+in-memory billing record changes within the policy cap and window; no real money moves.
 
 ```bash
 relay run "When does my plan renew?" --customer cus_ada      # resolved, answered

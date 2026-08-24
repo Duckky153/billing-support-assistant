@@ -1,7 +1,7 @@
 # Relay
 
-**A safe autonomous customer-support agent.** Relay reads a customer's real
-billing state, decides how to resolve their ticket with an LLM, and then — before
+**A safe autonomous customer-support agent.** Relay reads customer-scoped billing
+state, decides how to resolve a ticket with an LLM, and then — before
 it does anything that touches money or account state — runs the proposed action
 through a **deny-by-default policy gate** and a **grounding gate**. If the action
 isn't explicitly authorized by policy, or Relay can't ground it in the customer's
@@ -24,8 +24,8 @@ intake → retrieve (scoped) → propose → ground → gate → execute | escal
 
 ## Why this design
 
-A support agent that can issue refunds is a production system wired to money. The
-hard part isn't getting the model to resolve the easy 80%; it's guaranteeing the
+A support agent allowed to issue refunds is a system wired to money-touching actions.
+The hard part isn't getting the model to resolve the easy 80%; it's guaranteeing the
 dangerous 20% can't blow up. Relay's stance, mirroring how Decagon, Sierra,
 Lorikeet, Cresta, and Gradient Labs talk about their own agents:
 
@@ -113,6 +113,10 @@ Python 3.11+ · Pydantic v2 (strict, immutable value objects) · OpenTelemetry �
 FastAPI · the Anthropic SDK with structured outputs (`messages.parse`, Claude
 Opus 4.8). Billing is an in-memory deterministic store by default; a Stripe
 adapter (`relay.stripe_store`) implements the same protocol for real accounts.
+
+The committed demo and every headline metric use the synthetic in-memory store. The
+Stripe adapter is an available integration surface, not evidence of a live deployment
+or real-money transaction.
 
 117 tests · `ruff` + `mypy --strict` clean · an independent leak-gate scanner in
 CI and as a pre-push hook.

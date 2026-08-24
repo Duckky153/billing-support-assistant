@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Relay: a safe autonomous customer-support agent</title>
-<meta name="description" content="Relay reads a customer's real billing records, decides a resolution with an LLM, and runs every money-touching action through a grounding gate and a deny-by-default policy gate before it executes. Unsafe-action rate: 0%, measured on a 64-case eval suite." />
+<meta name="description" content="Relay reads customer-scoped billing records, decides a resolution with an LLM, and runs every money-touching action through a grounding gate and a deny-by-default policy gate before it executes. Unsafe-action rate: 0%, measured on a synthetic 64-case eval suite." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -344,7 +344,7 @@
   <div class="wrap">
     <div class="hero-grid">
       <div>
-        <p class="hero-kicker micro">An AI support agent that can move real money</p>
+        <p class="hero-kicker micro">An AI support agent built for money-touching actions</p>
         <h1 class="headline">
           It can issue refunds.<br>
           So it must <em>never</em><br>
@@ -352,9 +352,9 @@
         </h1>
         <p class="dek">
           Relay is an AI agent that handles customer support tickets, including ones that
-          involve money, like refunds. For each ticket it looks up that customer's real
-          billing records, decides what to do, and then <b>checks that decision twice</b>
-          before anything happens: once to confirm it's based on the customer's own real
+          involve money, like refunds. For each ticket it looks up billing records scoped
+          to that customer, decides what to do, and then <b>checks that decision twice</b>
+          before anything happens: once to confirm it's based on the customer's own
           records, and once to confirm the rules actually allow it. If either check fails,
           Relay hands the ticket to a person instead of guessing.
         </p>
@@ -362,8 +362,8 @@
 
       <div class="hero-stat">
         <span class="figure">0<span class="pct">%</span></span>
-        <div class="figure-label">how often it did something unsafe with money. The one number that gets you fired.</div>
-        <div class="figure-sub micro">enforced by the safety checks, not the AI · tested on 64 cases</div>
+        <div class="figure-label">unsafe money-touching actions executed in the synthetic eval. The one number that gets you fired.</div>
+        <div class="figure-sub micro">enforced by the safety checks, not the AI · tested on 64 synthetic cases</div>
       </div>
     </div>
 
