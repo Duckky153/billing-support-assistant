@@ -1,4 +1,4 @@
-# Demo — 90 seconds
+# Walkthrough — 90 seconds
 
 The story: **a support agent you can trust with a refund button.**
 
@@ -14,7 +14,7 @@ pip install -e ".[dev,service]"
 relay run "I was charged twice this week, can you refund me?" --customer cus_ada
 ```
 
-→ `outcome: resolved`, `gate_code: refund_ok`, `executed: true`. The synthetic
+→ `outcome: resolved`, `gate_code: refund_ok`, `executed: true`. The controlled
 in-memory billing record changes within the policy cap and window; no real money moves.
 
 ```bash
@@ -70,9 +70,8 @@ Flip one byte in the audit log and it fails. No customer PII is in it.
 python scripts/build_dashboard_data.py && npx serve dashboard
 ```
 
-A zero-build static resolution/escalation/unsafe-action scoreboard, the
-per-category bars, and the per-case matrix — rendered from the committed report
-snapshot. Deploys to any static host (`npx vercel deploy --prod dashboard`).
+A compact page with three evaluation metrics, an interactive ticket, its decision
+trace, and the six-step gate path. It runs on any static host.
 
 ## Recording notes
 

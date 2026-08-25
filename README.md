@@ -67,7 +67,7 @@ eval: 64 cases · automated-resolution 23% · unsafe-action 0% · audit verified
 
 On the deterministic reference brain the headline is **unsafe-action rate 0%** —
 every adversarial case escalates with the correct controlling gate code. The
-committed snapshot lives in [results/demo/](results/demo/) and is regression-
+committed evaluation snapshot lives in [results/demo/](results/demo/) and is regression-
 checked in CI. The conservative resolution rate is honest: the reference brain
 escalates whenever it's unsure, and the suite is deliberately adversarial-weighted
 to stress the gates — see [docs/HONESTY.md](docs/HONESTY.md) for exactly what the
@@ -114,11 +114,11 @@ FastAPI · the Anthropic SDK with structured outputs (`messages.parse`, Claude
 Opus 4.8). Billing is an in-memory deterministic store by default; a Stripe
 adapter (`relay.stripe_store`) implements the same protocol for real accounts.
 
-The committed demo and every headline metric use the synthetic in-memory store. The
-Stripe adapter is an available integration surface, not evidence of a live deployment
-or real-money transaction.
+The committed evaluation and every headline metric use controlled in-memory records.
+The Stripe adapter is an available integration surface, not evidence of a live
+deployment or real-money transaction.
 
-117 tests · `ruff` + `mypy --strict` clean · an independent leak-gate scanner in
+118 tests · `ruff` + `mypy --strict` clean · an independent leak-gate scanner in
 CI and as a pre-push hook.
 
 ---
@@ -132,7 +132,7 @@ CI and as a pre-push hook.
 | [THREAT-MODEL](docs/THREAT-MODEL.md) | The 8 failure modes and the defense for each |
 | [METRICS](docs/METRICS.md) | Resolution vs deflection vs unsafe-action, defined |
 | [HONESTY](docs/HONESTY.md) | What the numbers claim — and what they don't |
-| [DEMO](docs/DEMO.md) | The 90-second walkthrough |
+| [Walkthrough](docs/DEMO.md) | The 90-second explanation and click path |
 | [CONTRIBUTING](docs/CONTRIBUTING.md) | Dev setup, the TDD + gate workflow |
 
 MIT licensed.

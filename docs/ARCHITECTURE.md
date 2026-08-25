@@ -38,7 +38,7 @@ policy gate returns `ALLOW`. Anything else escalates.
   roughly what the ticket asks, including citing an invoice id a malicious ticket
   names. That naivety is intentional: it lets the eval prove the gates are
   load-bearing, because even a fully ticket-driven brain can't cause an unsafe
-  action once the gates run. Drives CI and the offline demo.
+  action once the gates run. Drives CI and the fixed evaluation.
 - **`ClaudeBrain`** — Claude with structured outputs (`messages.parse` →
   `AgentProposal`, Opus 4.8, adaptive thinking). On a refusal or parse failure it
   falls back to a safe escalation rather than guessing.

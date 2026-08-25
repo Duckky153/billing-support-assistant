@@ -1,14 +1,11 @@
-// relay-demo.js — a FAITHFUL in-browser port of Relay's offline decision path:
+// Browser implementation of Relay's local decision path:
 // the deterministic MockBrain + the grounding gate + the deny-by-default policy
-// gate, over the same fixed demo world (relay/eval/golden.py::build_world).
+// gate, over the same fixed evaluation world (relay/eval/golden.py::build_world).
 //
-// This is NOT a re-implementation that "looks similar" — it mirrors the Python
-// line for line so a ticket typed in the browser produces the SAME outcome and
-// gate code as `relay run` on the server. It is verified against the real Python
-// output in CI-style cross-checks (scripts/check_js_parity.py). It uses the
-// offline MockBrain (the deliberately naive, ticket-trusting brain), exactly as
-// the offline server demo does — so it shows the GATES catching a trickable
-// brain, with no API key and nothing to crash.
+// The browser path mirrors the Python logic so a ticket produces the same outcome
+// and gate code as `relay run`. scripts/check_js_parity.py checks that parity. It
+// uses the local MockBrain, a deliberately ticket-trusting reference brain, to
+// show the gates catching unsafe proposals without requiring an API key.
 //
 // "now" is frozen at 2025-02-01 (the eval world's clock), so invoice ages and
 // the 30-day refund window are deterministic.
@@ -26,7 +23,7 @@
     sensitive_topics_escalate: true,
   };
 
-  // --- the demo world (relay/eval/golden.py::build_world) -------------------
+  // --- the evaluation world (relay/eval/golden.py::build_world) -------------
   // age_days = (now - created_at).days, precomputed since the clock is fixed.
   var CUSTOMERS = {
     cus_ada: { id: "cus_ada", name: "Ada" },

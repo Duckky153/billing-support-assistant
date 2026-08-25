@@ -95,7 +95,7 @@ def test_dashboard_keeps_evaluation_copy_short_and_scoped() -> None:
     dashboard = Path(__file__).resolve().parents[1] / "dashboard" / "index.html"
     page = dashboard.read_text(encoding="utf-8")
     assert "Automated resolutions" in page
-    assert "Metrics come from 64 simulated tickets, not production traffic." in page
+    assert "Results from a controlled 64-ticket evaluation." in page
     assert "Correct outcome" not in page
     assert "Expected gate outcome" not in page
     assert "hash-chained audit" not in page

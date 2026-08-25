@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light only">
   <title>Relay — gated AI support decisions</title>
-  <meta name="description" content="An interactive support-agent prototype with grounding and policy gates between model output and action.">
+  <meta name="description" content="An interactive support workflow with grounding and policy gates between model output and action.">
   <style>
     :root {
       --navy: #0d2047; --blue: #2357d9; --blue-soft: #edf3ff;
@@ -127,11 +127,11 @@
       <article class="metric"><span>Automated resolutions</span><strong id="metric-resolved">—</strong><small>handled without review</small></article>
       <article class="metric"><span>Unsafe approvals</span><strong id="metric-unsafe">—</strong><small>across the test suite</small></article>
     </section>
-    <p class="eval-note">Metrics come from 64 simulated tickets, not production traffic.</p>
+    <p class="eval-note">Results from a controlled 64-ticket evaluation.</p>
 
     <section class="panel" id="try">
       <div class="section-head">
-        <div><p class="eyebrow">Interactive demo</p><h2>Run one support ticket</h2></div>
+        <div><p class="eyebrow">Interactive workflow</p><h2>Run one support ticket</h2></div>
         <p>Choose a preset or edit the ticket to see the decision path.</p>
       </div>
       <div class="demo-grid">
@@ -160,7 +160,7 @@
             <div class="trace-row"><span>State change approved</span><strong id="result-executed">—</strong></div>
             <div class="trace-row"><span>Reason</span><strong id="result-reason">—</strong></div>
           </div>
-          <p class="result-note">This browser demo evaluates the decision path only. It does not contact a billing system.</p>
+          <p class="result-note">This page shows the decision path without contacting a billing system.</p>
         </div>
       </div>
     </section>
@@ -207,14 +207,14 @@
       const result = window.RelayDemo.relayDecide(document.querySelector("#customer").value, document.querySelector("#ticket").value);
       const resolved = result.outcome === "resolved";
       const groundingFailed = result.grounding_code && result.grounding_code !== "ok" && result.grounding_code !== "n/a";
-      document.querySelector("#result-title").textContent = resolved ? "Resolved by the demo" : "Sent to human review";
+      document.querySelector("#result-title").textContent = resolved ? "Resolved automatically" : "Sent to human review";
       const status = document.querySelector("#result-status");
       status.textContent = resolved ? "Approved" : "Stopped";
       status.className = `status ${resolved ? "safe" : "review"}`;
       document.querySelector("#result-proposed").textContent = result.proposed;
       document.querySelector("#result-grounding").textContent = friendlyCode(result.grounding_code);
       document.querySelector("#result-policy").textContent = groundingFailed ? "Not reached" : friendlyCode(result.policy_code);
-      document.querySelector("#result-executed").textContent = result.executed ? "Yes — simulated" : "No";
+      document.querySelector("#result-executed").textContent = result.executed ? "Yes" : "No";
       document.querySelector("#result-reason").textContent = result.reason;
     }
 

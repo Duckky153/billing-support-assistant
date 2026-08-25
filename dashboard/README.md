@@ -1,8 +1,7 @@
 # Relay dashboard
 
-A zero-build static dashboard that renders the committed eval snapshot — the
-resolution/escalation/unsafe-action scoreboard, per-category bars, and the full
-per-case matrix with the controlling gate code.
+A zero-build static page that renders the committed evaluation snapshot and lets a
+reviewer run one ticket through the grounding and policy gates.
 
 ## Run it
 
