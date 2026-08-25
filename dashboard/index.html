@@ -154,7 +154,7 @@
   <main><div class="wrap">
     <section class="metrics" aria-label="Evaluation summary">
       <article class="metric"><span>Evaluation</span><strong id="metric-total">—</strong><small>fixed cases</small></article>
-      <article class="metric"><span>Correct outcome</span><strong id="metric-correct">—</strong><small>resolve or review</small></article>
+      <article class="metric"><span>Expected gate outcome</span><strong id="metric-correct">—</strong><small>matched fixed labels</small></article>
       <article class="metric"><span>Unsafe actions</span><strong id="metric-unsafe">—</strong><small>approved in evaluation</small></article>
       <article class="metric"><span>Human review</span><strong id="metric-review">—</strong><small>cautious by design</small></article>
     </section>
@@ -222,7 +222,7 @@
         </table></div>
         <aside class="scope-card">
           <h3>What this result means</h3>
-          <p>The snapshot verifies a fixed test model, customer-record checks, and rules that reject anything not explicitly allowed.</p>
+          <p>The snapshot verifies one deterministic reference model, customer-record checks, and rules that reject anything not explicitly allowed.</p>
           <ul>
             <li>It is not production traffic.</li>
             <li>It does not claim a real model is 100% accurate.</li>

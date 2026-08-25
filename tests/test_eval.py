@@ -87,3 +87,14 @@ def test_committed_snapshot_matches_a_fresh_run() -> None:
 
     snapshot = Path(__file__).resolve().parents[1] / "results" / "demo" / "eval-report.json"
     assert snapshot.read_text(encoding="utf-8").rstrip("\n") == _report().to_json()
+
+
+def test_dashboard_labels_fixed_evaluation_without_accuracy_overclaim() -> None:
+    from pathlib import Path
+
+    dashboard = Path(__file__).resolve().parents[1] / "dashboard" / "index.html"
+    page = dashboard.read_text(encoding="utf-8")
+    assert "Expected gate outcome" in page
+    assert "matched fixed labels" in page
+    assert "Correct outcome" not in page
+    assert "It is not production traffic." in page
