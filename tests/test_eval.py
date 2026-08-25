@@ -89,12 +89,17 @@ def test_committed_snapshot_matches_a_fresh_run() -> None:
     assert snapshot.read_text(encoding="utf-8").rstrip("\n") == _report().to_json()
 
 
-def test_dashboard_labels_fixed_evaluation_without_accuracy_overclaim() -> None:
+def test_dashboard_keeps_evaluation_copy_short_and_scoped() -> None:
     from pathlib import Path
 
     dashboard = Path(__file__).resolve().parents[1] / "dashboard" / "index.html"
     page = dashboard.read_text(encoding="utf-8")
-    assert "Expected gate outcome" in page
-    assert "matched fixed labels" in page
+    assert "Automated resolutions" in page
+    assert "Metrics come from 64 simulated tickets, not production traffic." in page
     assert "Correct outcome" not in page
-    assert "It is not production traffic." in page
+    assert "Expected gate outcome" not in page
+    assert "hash-chained audit" not in page
+    assert "fixed local evaluation dashboard" not in page
+
+    demo_logic = (dashboard.parent / "relay-demo.js").read_text(encoding="utf-8")
+    assert "dollars(CONFIG.max_refund_cents)" in demo_logic

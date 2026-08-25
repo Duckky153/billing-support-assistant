@@ -224,7 +224,7 @@
     if (!inv) return esc("unknown_invoice", "invoice '" + action.invoice_id + "' not in this customer's records");
     if (inv.customer_id !== customer.id) return esc("cross_customer", "invoice is on another customer's account; refusing");
     if (inv.status !== "paid") return esc("invoice_not_refundable", "invoice '" + action.invoice_id + "' is " + inv.status + ", not paid");
-    if (action.amount_cents > CONFIG.max_refund_cents) return esc("refund_exceeds_cap", "refund over the auto-refund cap " + CONFIG.max_refund_cents);
+    if (action.amount_cents > CONFIG.max_refund_cents) return esc("refund_exceeds_cap", "refund exceeds the " + dollars(CONFIG.max_refund_cents) + " automatic limit");
     if (action.amount_cents > remaining(inv)) return esc("refund_exceeds_remaining", "refund exceeds remaining refundable balance");
     if (inv.age_days > CONFIG.refund_window_days) return esc("refund_outside_window", "invoice " + inv.age_days + "d old, past the " + CONFIG.refund_window_days + "d refund window");
     return { verdict: "allow", code: "refund_ok", reason: "refund within cap, window, remaining balance, and ownership" };
