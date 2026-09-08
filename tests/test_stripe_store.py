@@ -10,8 +10,9 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
 from relay.domain import InvoiceStatus, SubscriptionStatus
-from relay.store import BillingStore
+from relay.store import BillingError, BillingStore
 from relay.stripe_store import StripeBillingStore
 
 NOW_TS = 1738368000  # 2025-02-01T00:00:00Z
@@ -108,7 +109,12 @@ class _RefundResource:
 
     def create(self, **kwargs: Any) -> dict[str, Any]:
         self._calls.append(kwargs)
-        return {"id": "re_1", "amount": kwargs["amount"]}
+        return {
+            "id": "re_1",
+            "amount": kwargs["amount"],
+            "charge": kwargs["charge"],
+            "status": "succeeded",
+        }
 
 
 def _store() -> StripeBillingStore:
@@ -160,3 +166,70 @@ def test_cancel_subscription_calls_delete() -> None:
     receipt = store.cancel_subscription("sub_1", idempotency_key="c1")
     assert receipt.status is SubscriptionStatus.CANCELED
     assert fake.cancel_calls == ["sub_1"]
+
+
+def test_adapter_replays_once_and_rejects_changed_payloads() -> None:
+    store = _store()
+    refund = store.issue_refund("in_1", 500, idempotency_key="r")
+    assert store.issue_refund("in_1", 500, idempotency_key="r") == refund
+    with pytest.raises(BillingError, match="idempotency"):
+        store.issue_refund("in_1", 600, idempotency_key="r")
+    with pytest.raises(BillingError, match="idempotency"):
+        store.issue_refund("in_2", 500, idempotency_key="r")
+    assert len(store.client.refund_calls) == 1
+    cancel = store.cancel_subscription("sub_1", idempotency_key="c")
+    assert store.cancel_subscription("sub_1", idempotency_key="c") == cancel
+    with pytest.raises(BillingError, match="idempotency"):
+        store.cancel_subscription("sub_other", idempotency_key="c")
+    assert store.client.cancel_calls == ["sub_1"]
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"id": "re_1", "amount": 500, "charge": "ch_other", "status": "succeeded"},
+        {"id": "re_1", "amount": 999, "charge": "ch_1", "status": "succeeded"},
+        {"id": "re_1", "amount": 500, "charge": "ch_1", "status": "pending"},
+        {"id": "re_1", "amount": 500, "charge": "ch_1", "status": "failed"},
+    ],
+)
+def test_refund_needs_matching_successful_provider_receipt(response, monkeypatch) -> None:
+    store = _store()
+    monkeypatch.setattr(store.client.Refund, "create", lambda **kwargs: response)
+    with pytest.raises(BillingError, match="verify downstream"):
+        store.issue_refund("in_1", 500, idempotency_key="r")
+
+
+@pytest.mark.parametrize(
+    "response", [{"id": "sub_other", "status": "canceled"}, {"id": "sub_1", "status": "active"}, {}]
+)
+def test_cancellation_needs_matching_canceled_provider_receipt(response, monkeypatch) -> None:
+    store = _store()
+    monkeypatch.setattr(store.client.Subscription, "delete", lambda oid: response)
+    with pytest.raises(BillingError, match="verify downstream"):
+        store.cancel_subscription("sub_1", idempotency_key="c")
+
+
+def test_uncertain_provider_failure_is_not_blindly_retried(monkeypatch) -> None:
+    store = _store()
+    calls = []
+
+    def uncertain(**kwargs):
+        calls.append(kwargs)
+        raise TimeoutError("response was lost")
+
+    monkeypatch.setattr(store.client.Refund, "create", uncertain)
+    for _ in range(2):
+        with pytest.raises(BillingError, match="verify downstream"):
+            store.issue_refund("in_1", 500, idempotency_key="r")
+    assert len(calls) == 1
+
+
+def test_adapter_rejects_unpaid_and_process_local_over_refund() -> None:
+    store = _store()
+    with pytest.raises(BillingError):
+        store.issue_refund("in_2", 100, idempotency_key="open")
+    store.issue_refund("in_1", 1500, idempotency_key="first")
+    with pytest.raises(BillingError):
+        store.issue_refund("in_1", 600, idempotency_key="second")
+    assert len(store.client.refund_calls) == 1

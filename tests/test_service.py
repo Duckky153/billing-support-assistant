@@ -22,6 +22,25 @@ def test_root_landing_page_is_helpful_html() -> None:
     assert "Relay" in body
     assert "/docs" in body  # links to the point-and-click Swagger demo
     assert "/tickets" in body
+    assert "local sample-data harness" in body
+    assert "does not authenticate" in body
+    assert "Unsafe-action rate: 0%" not in body
+    assert "trust with a refund button" not in body
+    assert "safe autonomous" not in client.get("/openapi.json").text.lower()
+
+
+def test_landing_page_refund_examples_match_their_claimed_behavior() -> None:
+    import json
+    import re
+
+    client = TestClient(create_app())
+    examples = re.findall(r"-d '([^']+)'", client.get("/").text)
+    assert len(examples) == 2
+    responses = [client.post("/tickets", json=json.loads(example)).json() for example in examples]
+    assert responses[0]["gate_code"] == "refund_ok"
+    assert responses[0]["receipt"]["invoice_id"] == "in_ada1"
+    assert responses[1]["gate_code"] == "cited_invoice_not_found"
+    assert responses[1]["receipt"] is None
 
 
 def test_post_in_policy_refund_resolves() -> None:
@@ -43,7 +62,7 @@ def test_post_injection_escalates_with_case_file() -> None:
     )
     body = r.json()
     assert body["outcome"] == "escalated"
-    assert body["gate_code"] == "cited_invoice_not_found"
+    assert body["gate_code"] == "agent_escalated"
     assert body["case_file"] is not None
 
 

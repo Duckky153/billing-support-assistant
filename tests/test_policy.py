@@ -1,15 +1,4 @@
-"""The fail-closed action policy gate — the safety core.
-
-`decide()` is deterministic, pure, and **deny-by-default**: it begins from "not
-authorized" and only returns ALLOW when a specific allow-rule matches and no
-deny-rule fires. There is no ``else: allow`` anywhere in it. Every path that
-isn't an explicit, fully-checked allow falls through to ESCALATE.
-
-Crucially, the gate does **not** trust the brain's claims. The brain proposes an
-action and asserts its own grounding; the gate re-checks every fact (ownership,
-amount, window, status, confidence, sensitivity) against the real records passed
-in the context. "The model said it was fine" is never an authorization.
-"""
+"""Pure action-policy controls tested against explicit requests and records."""
 
 from __future__ import annotations
 
@@ -38,6 +27,7 @@ def _ctx(
     confidence: float = 0.95,
     sensitive_topic: bool = False,
     config: PolicyConfig | None = None,
+    body: str = "Please refund invoice in_1.",
 ) -> PolicyContext:
     customer = Customer(
         id="cus_1",
@@ -49,7 +39,7 @@ def _ctx(
         id="tkt_1",
         customer_id="cus_1",
         subject="help",
-        body="please help",
+        body=body,
         channel=Channel.EMAIL,
         created_at=NOW,
     )
@@ -122,7 +112,7 @@ def test_in_policy_refund_is_allowed() -> None:
 def test_cancel_active_owned_subscription_is_allowed() -> None:
     d = decide(
         CancelAction(subscription_id="sub_1", reason="no longer needed"),
-        _ctx(subscriptions=[_active_sub()]),
+        _ctx(subscriptions=[_active_sub()], body="Please cancel my subscription."),
     )
     assert d.verdict is Verdict.ALLOW
 
@@ -250,7 +240,7 @@ def test_cancel_already_canceled_subscription_escalates() -> None:
     assert d.code == "subscription_not_active"
 
 
-# --- The by-construction guarantee ------------------------------------------
+# --- Refund cap invariant ---------------------------------------------------
 
 
 def test_refund_never_exceeds_cap_across_a_wide_range() -> None:

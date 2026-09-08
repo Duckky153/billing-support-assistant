@@ -1,57 +1,58 @@
-# Honesty statement
+# What the results mean
 
-What the numbers in this repo claim — and, just as importantly, what they don't.
+## Current evidence
 
-## What the eval is
+The committed evaluation uses one controlled billing world, a deterministic
+MockBrain, and 64 fixed tickets. A fresh world is created for each ticket.
+The current run resolves 7 and escalates 57; 0 labeled unsafe mutations execute.
+Seven out of 64 is 10.9375%, rounded to 11% in the CLI.
 
-A small, fixed, **deterministic** suite: one world of customers/subscriptions/
-invoices and 64 labeled tickets, deliberately weighted toward edge and adversarial
-cases (prompt injection, cross-customer citation, over-cap / out-of-window
-refunds, sensitive topics). It is a **safety stress test**, not a representative
-production traffic sample.
+The corpus is not representative of customer traffic. Passing it does not
+establish production safety, customer satisfaction, or live-model accuracy.
+The browser and Python checks include additional regressions outside the 64 cases.
 
-## What the headline numbers mean
+## Why the prior result changed
 
-On the deterministic reference brain (`MockBrain`):
+The September 8 audit reproduced unwanted cancellations/refunds from questions,
+cross-customer receipt reuse, broken concurrent audit linkage, and irrelevant
+answers reported as resolved. Existing tests and the old fixed evaluation passed.
 
-- **`unsafe_action_rate == 0`** — the real claim. Across every adversarial case, no
-  unsafe state change executes. This is meaningful because the suite is built to
-  *try* to make the agent do unsafe things, and the gates stop all of them. It is
-  the expected, correct behavior of a deny-by-default action layer — the value is
-  the by-construction guarantee (see [SAFETY.md](SAFETY.md)) plus the measured
-  confirmation.
-- **`accuracy == 100%`** — expected and not impressive on its own. The reference
-  brain is deterministic and the labels encode its correct behavior; 100% here
-  means "no gate regressed," which is what the snapshot test guards. It is **not**
-  a claim that a real LLM would be 100% correct.
-- **`automated_resolution_rate ≈ 23%`** — honest and intentionally conservative.
-  The reference brain escalates whenever it is unsure, and the suite is
-  adversarial-heavy, so most cases *should* escalate. This is **not** a deflection
-  benchmark and should not be read as one. A real, well-tuned LLM brain on
-  representative traffic would resolve far more.
+The candidate script had treated observed behavior as expected behavior, and
+discarded discovered unsafe examples. That is not independent ground truth.
+It now exports observations for review, retains counterexamples, and does not
+generate approved golden labels.
 
-## What changes with a real LLM brain
+All 64 ticket bodies were hand-reviewed against the sample records and the
+bounded request contract. Forty-four expected outcome/code pairs changed.
+The old 15 resolutions included irrelevant answers and ignored constraints;
+the new grammar also hands off longer legitimate requests it cannot interpret.
+This is a correction of the measurement and behavior, not evidence of a traffic
+benchmark regression or improvement. Full changes are in the
+[audit record](2026-09-08-WORKFLOW-AUDIT.md).
 
-Run `relay eval --brain claude` (needs `ANTHROPIC_API_KEY`) and the picture gets
-more interesting and more honest:
+## Remaining boundaries
 
-- `accuracy` drops below 100% — a real model occasionally proposes the wrong
-  action. That's the point of having an eval.
-- `deflection_rate` rises above `automated_resolution_rate` — the model sometimes
-  resolves a ticket *wrongly* (resolved, not escalated, but incorrect). The gap is
-  visible, by design.
-- **`unsafe_action_rate` stays 0** — because it is enforced by the gates, not the
-  model. This is the load-bearing guarantee, and it does not depend on which brain
-  is plugged in.
+- Live Claude was not called in this audit. Its structured-output path was tested
+  with injected responses, including malicious mutation proposals.
+- Citation ownership is not semantic validation of an answer. A test shows that
+  a wrong $999 answer can pass with a valid subscription citation. Confidence and
+  sensitive-topic flags are supplied by the model, not independent classifiers.
+- A CaseFile contains an evidence note and unsent proposed draft, not verified
+  findings, a sent message, or a completed human handoff.
+- Request matching is a narrow literal grammar, not general language understanding.
+  Unknown wording requires review; it does not prove every negation or nuance is understood.
+- Replay state is in memory, bound to one Agent/store instance. Restarted or
+  multi-worker deployments need a durable authenticated request/receipt ledger.
+- The Stripe adapter uses legacy-style injected object mappings and has not been
+  verified against a live account or current end-to-end SDK flow. Current API-version
+  mappings, pagination, charge-level refund reconciliation, and durable uncertain
+  outcome handling remain prerequisites for production use.
 
-## Other honest caveats
+The receipt checks use documented [refund amount, charge, and status fields](https://docs.stripe.com/api/refunds/object)
+and [cancellation identity/status](https://docs.stripe.com/api/subscriptions/cancel).
+[Stripe idempotency](https://docs.stripe.com/api/idempotent_requests) applies to POST
+requests, not DELETE. Cancellation replay protection here is local, not a provider
+idempotency promise. Provider timeouts or incomplete receipts require reconciliation;
+they do not prove that a billing effect did not occur.
 
-- The default billing store is in-memory; the Stripe adapter is real but the
-  committed eval runs offline against the deterministic store.
-- Sensitive-topic detection in `MockBrain` is keyword-based. The `ClaudeBrain`
-  classifies, but no classifier is perfect; the safe failure (escalate) is the
-  default. A production system should add an independent classifier.
-- This guards the **action** layer. It does not guarantee answer *text* is always
-  correct — see [SAFETY.md](SAFETY.md) "What is not claimed."
-- The dashboard renders the committed snapshot; it is a static report of one run,
-  not a live monitor.
+See [SAFETY.md](SAFETY.md) for exact request examples and audit-chain limits.

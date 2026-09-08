@@ -1,10 +1,10 @@
-"""Relay — a safe autonomous customer-support agent.
+"""Relay — a local support-agent demo with bounded execution controls.
 
-Relay reads a customer's real billing state, proposes a resolution with an LLM,
+Relay reads customer-scoped records and proposes a resolution,
 then authorizes every money/account-touching action through a deny-by-default
 policy gate and a grounding gate before acting. When an action isn't explicitly
 allowed, or can't be grounded in the customer's records, Relay escalates to a
-human with a case file instead of guessing.
+local human-review case file. Arbitrary answer prose is not semantically verified.
 """
 
 __version__ = "0.1.0"

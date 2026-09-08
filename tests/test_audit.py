@@ -1,15 +1,80 @@
-"""Hash-chained, deny-by-default-redacted audit log.
-
-Every decision Relay makes is recorded in an append-only, hash-chained log.
-The chain makes tampering detectable: change or drop any record and
-``verify_chain`` returns False. Redaction is deny-by-default — only an explicit
-allowlist of non-PII fields survives into a record, so customer emails and raw
-ticket bodies can never leak into the audit trail.
-"""
+"""Local audit integrity, detail redaction, and concurrent append regressions."""
 
 from __future__ import annotations
 
 from relay.audit import GENESIS_HASH, AuditLog, redact, verify_chain
+
+
+def test_concurrent_append_is_atomic(monkeypatch) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+    from contextlib import suppress
+    from threading import Event
+
+    import relay.audit as audit_module
+
+    entered, release, second_started = Event(), Event(), Event()
+    original = audit_module._hash_payload
+
+    def slow_first_hash(payload):
+        if payload["ticket_id"] == "first":
+            entered.set()
+            assert release.wait(2)
+        return original(payload)
+
+    monkeypatch.setattr(audit_module, "_hash_payload", slow_first_hash)
+    log = AuditLog()
+
+    def append(ticket_id):
+        if ticket_id == "second":
+            second_started.set()
+        return log.append(
+            ticket_id=ticket_id,
+            customer_id="cus_1",
+            kind="resolved",
+            action_type="answer",
+            verdict="allow",
+            code="answer_ok",
+            grounded=True,
+            detail={},
+            timestamp="2025-01-31",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(append, "first")
+        assert entered.wait(2)
+        second = pool.submit(append, "second")
+        assert second_started.wait(2)
+        # An unlocked append can finish while the first hash is paused.
+        with suppress(TimeoutError):
+            second.result(timeout=0.05)
+        release.set()
+        first.result()
+        second.result()
+    assert verify_chain(log.records)
+    assert [r.seq for r in log.records] == [0, 1]
+
+
+def test_readers_cannot_mutate_stored_audit_details() -> None:
+    log = _log()
+    log.records[0].detail["amount_cents"] = "999"
+    assert verify_chain(log.records)
+    assert log.records[0].detail["amount_cents"] == "2000"
+
+
+def test_append_itself_drops_non_allowlisted_detail_fields() -> None:
+    log = AuditLog()
+    record = log.append(
+        ticket_id="t",
+        customer_id="c",
+        kind="resolved",
+        action_type="answer",
+        verdict="allow",
+        code="answer_ok",
+        grounded=True,
+        detail={"email": "ada@example.com", "amount_cents": "20"},
+        timestamp="2025-01-31",
+    )
+    assert record.detail == {"amount_cents": "20"}
 
 
 def _log() -> AuditLog:

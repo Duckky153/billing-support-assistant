@@ -1,21 +1,9 @@
-"""The brain — turns a ticket plus retrieved records into a structured proposal.
+"""Produce structured proposals; never directly execute billing operations.
 
-The brain only ever *proposes*. It never touches money or account state; the
-orchestrator runs its proposal through the grounding and policy gates and only
-then, if both allow, calls the store. So the brain can be naive, wrong, or even
-prompt-injected and the system stays safe — that property is what the eval
-proves.
-
-Two implementations:
-
-* :class:`MockBrain` — deterministic, dependency-free, ticket-trusting. Drives
-  CI and the offline demo. It does roughly what the ticket asks, including
-  citing an invoice id a malicious ticket names — exactly the behavior the gates
-  are there to contain.
-* :class:`ClaudeBrain` — the real brain. Uses Claude with structured outputs to
-  fill the :class:`~relay.proposal.AgentProposal` schema. If the model returns no
-  valid structured proposal (a refusal, a parse failure), it falls back to a
-  safe escalation rather than guessing.
+MockBrain supports a bounded request grammar and specific record-backed questions.
+ClaudeBrain uses structured model output and falls back to escalation on failures.
+Both run through independent execution gates. Arbitrary model answer prose is not
+semantically verified. See docs/SAFETY.md and docs/HONESTY.md.
 """
 
 from __future__ import annotations
@@ -24,6 +12,7 @@ import re
 from typing import Any, Protocol, runtime_checkable
 
 from relay.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
+from relay.authorization import mutation_request, normalize
 from relay.domain import Customer, Invoice, InvoiceStatus, Subscription, Ticket, dollars
 from relay.proposal import AgentProposal, Grounding, Intent
 
@@ -59,7 +48,6 @@ _SENSITIVE_KEYWORDS = (
     "kill myself",
     "end my life",
 )
-_REFUND_SIGNALS = ("refund", "charged twice", "double charge", "money back", "overcharged")
 _QUESTION_WORDS = ("what", "when", "how", "why", "where", "which", "can i", "do i")
 
 
@@ -88,7 +76,7 @@ def default_escalation_proposal(customer_id: str, reason: str) -> AgentProposal:
 
 
 class MockBrain:
-    """Deterministic, ticket-trusting support agent. No network, no API key."""
+    """Bounded deterministic support demo. No network, no API key."""
 
     def propose(
         self,
@@ -104,12 +92,13 @@ class MockBrain:
         if not body.strip():
             return self._escalate(customer.id, "ticket has no content", sensitive, confidence=0.3)
 
-        if "cancel" in low:
+        request = mutation_request(body)
+        if request is not None and request.kind == "cancel_subscription":
             return self._cancel(customer, subscriptions, body, sensitive)
-        if any(sig in low for sig in _REFUND_SIGNALS):
+        if request is not None and request.kind == "refund":
             return self._refund(customer, invoices, body, sensitive)
         if "?" in body or any(w in low for w in _QUESTION_WORDS):
-            return self._answer(customer, subscriptions, invoices, sensitive)
+            return self._answer(customer, subscriptions, invoices, sensitive, body)
         return self._escalate(customer.id, "intent unclear", sensitive, confidence=0.55)
 
     # --- builders ----------------------------------------------------------
@@ -121,6 +110,9 @@ class MockBrain:
             invoice_id = named.group(0)
             known = next((i for i in invoices if i.id == invoice_id), None)
             amount = known.refundable_remaining_cents if known else 1000
+            request = mutation_request(body)
+            if request is not None and request.amount_cents is not None:
+                amount = request.amount_cents
             return AgentProposal(
                 intent=Intent.REFUND_REQUEST,
                 action=RefundAction(
@@ -194,11 +186,50 @@ class MockBrain:
         subscriptions: list[Subscription],
         invoices: list[Invoice],
         sensitive: bool,
+        body: str,
     ) -> AgentProposal:
+        text = normalize(body).rstrip("?.!")
+        text = re.sub(r"^quick question\s*[—:-]\s*", "", text)
+        text = re.sub(r"^thanks for sorting out the upgrade so quickly! by the way, ", "", text)
+        renewal = re.fullmatch(
+            r"(?:when|what day) does my (?:plan|subscription) renew"
+            r"(?:,? and what will i be charged)?",
+            text,
+        )
+        status = re.fullmatch(r"do i (?:currently )?have an active subscription", text)
+        invoice_question = re.fullmatch(
+            r"what (?:was|is) the (?:total )?amount (?:on|of) my latest invoice", text
+        )
+        if not (renewal or status or invoice_question):
+            return self._escalate(
+                customer.id,
+                "question needs human review; no supported answer",
+                sensitive,
+                confidence=0.55,
+            )
         active = next((s for s in subscriptions if s.is_active), None)
-        if active is not None:
+        cited_invoices: list[str] = []
+        if invoice_question:
+            if not invoices:
+                return self._escalate(
+                    customer.id, "no invoice on file to answer from", sensitive, confidence=0.6
+                )
+            latest = max(invoices, key=lambda i: (i.created_at, i.id))
             reply = (
-                f"Your {active.plan} plan renews on {active.current_period_end.date().isoformat()}."
+                f"Your latest invoice {latest.id} totals {dollars(latest.amount_cents)} "
+                f"{latest.currency.upper()} and is {latest.status.value}."
+            )
+            evidence = (
+                f"invoice {latest.id}: amount {latest.amount_cents} cents; "
+                f"status {latest.status.value}"
+            )
+            cited_invoices = [latest.id]
+            cited_subs = []
+        elif active is not None:
+            reply = (
+                f"Your {active.plan} subscription is active. It renews on "
+                f"{active.current_period_end.date().isoformat()} at "
+                f"{dollars(active.amount_cents)} {active.currency.upper()}."
             )
             evidence = f"active subscription {active.id}"
             cited_subs = [active.id]
@@ -212,7 +243,10 @@ class MockBrain:
             confidence=0.88,
             sensitive_topic=sensitive,
             grounding=Grounding(
-                customer_id=customer.id, cited_subscription_ids=cited_subs, evidence=evidence
+                customer_id=customer.id,
+                cited_subscription_ids=cited_subs,
+                cited_invoice_ids=cited_invoices,
+                evidence=evidence,
             ),
             customer_reply=reply,
             rationale="answered from the customer's account records",

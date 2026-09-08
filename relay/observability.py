@@ -12,20 +12,24 @@ hands out all-zero ids). Configuring an exporter is the caller's choice.
 
 from __future__ import annotations
 
+import threading
+
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 
 _configured = False
+_configuration_lock = threading.Lock()
 
 
 def configure() -> None:
     """Idempotently ensure an SDK TracerProvider is installed."""
     global _configured
-    if _configured:
-        return
-    if not isinstance(trace.get_tracer_provider(), TracerProvider):
-        trace.set_tracer_provider(TracerProvider())
-    _configured = True
+    with _configuration_lock:
+        if _configured:
+            return
+        if not isinstance(trace.get_tracer_provider(), TracerProvider):
+            trace.set_tracer_provider(TracerProvider())
+        _configured = True
 
 
 def get_tracer() -> trace.Tracer:

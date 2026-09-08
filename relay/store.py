@@ -128,12 +128,17 @@ class InMemoryBillingStore:
         # against one invoice can't both pass the balance check and overdraw it.
         with self._write_lock:
             if idempotency_key in self._refunds:
-                return self._refunds[idempotency_key]
+                previous = self._refunds[idempotency_key]
+                if previous.invoice_id != invoice_id or previous.amount_cents != amount_cents:
+                    raise BillingError("idempotency key conflicts with earlier refund payload")
+                return previous
             if amount_cents <= 0:
                 raise BillingError("refund amount must be positive")
             invoice = self._invoices.get(invoice_id)
             if invoice is None:
                 raise BillingError(f"unknown invoice {invoice_id!r}")
+            if invoice.status is not InvoiceStatus.PAID:
+                raise BillingError("invoice is not paid")
             if amount_cents > invoice.refundable_remaining_cents:
                 raise BillingError(
                     f"refund {amount_cents} exceeds remaining "
@@ -158,7 +163,12 @@ class InMemoryBillingStore:
     def cancel_subscription(self, subscription_id: str, *, idempotency_key: str) -> CancelReceipt:
         with self._write_lock:
             if idempotency_key in self._cancels:
-                return self._cancels[idempotency_key]
+                previous = self._cancels[idempotency_key]
+                if previous.subscription_id != subscription_id:
+                    raise BillingError(
+                        "idempotency key conflicts with earlier cancellation payload"
+                    )
+                return previous
             subscription = self._subscriptions.get(subscription_id)
             if subscription is None:
                 raise BillingError(f"unknown subscription {subscription_id!r}")

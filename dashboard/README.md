@@ -3,6 +3,10 @@
 A zero-build static page that renders the committed evaluation snapshot and lets a
 reviewer run one ticket through the grounding and policy gates.
 
+This is a decision preview, not billing execution or a sender. Replies and review
+packets are visible drafts. Editing the ticket or customer invalidates the old
+result. See ../docs/SAFETY.md for supported short requests and limitations.
+
 ## Run it
 
 It's plain HTML + one generated data module. No build step.
@@ -24,3 +28,7 @@ npx vercel deploy --prod dashboard          # or push dashboard/ to GitHub Pages
 `report-data.js` embeds the report as `window.RELAY_REPORT`, so the page works
 from a static host and from `file://` with no fetch/CORS step. Regenerate it
 whenever the snapshot changes (CI checks it stays in sync).
+
+Offline checks: `python scripts/check_js_parity.py` compares 64 fixed tickets plus
+15 regressions against Python, including replies and handoff presence;
+`node scripts/check_dashboard_ui.js` exercises the shipped page event handlers.

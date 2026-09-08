@@ -19,7 +19,7 @@ def test_eval_writes_a_valid_report_and_audit(tmp_path: Path) -> None:
 
 
 def test_run_resolves_an_in_policy_refund(capsys) -> None:  # type: ignore[no-untyped-def]
-    code = main(["run", "I was charged twice, please refund", "--customer", "cus_ada"])
+    code = main(["run", "I was charged twice, please refund me", "--customer", "cus_ada"])
     assert code == 0
     out = json.loads(capsys.readouterr().out)
     assert out["outcome"] == "resolved"
@@ -30,7 +30,7 @@ def test_run_escalates_an_injection(capsys) -> None:  # type: ignore[no-untyped-
     assert code == 0
     out = json.loads(capsys.readouterr().out)
     assert out["outcome"] == "escalated"
-    assert out["gate_code"] == "cited_invoice_not_found"
+    assert out["gate_code"] == "agent_escalated"
 
 
 def test_verify_chain_accepts_intact_and_rejects_tampered(tmp_path: Path) -> None:

@@ -1,8 +1,9 @@
 # Contribution shapes
 
-Relay is a reference implementation of a safe autonomous support agent. Here is
-how its pieces map onto how specific teams describe their own systems, and the
-concrete ways it could extend toward each. (Public framing, 2025–2026.)
+Relay is a local support-agent demo with bounded execution controls. These are
+historical extension ideas, not evidence of integration, feature parity, or a
+current vendor architecture. Vendor descriptions below were not re-verified in
+the September 8 workflow audit. See SAFETY.md for Relay's actual current limits.
 
 ## Decagon
 Conversational agents that resolve end-to-end, with **human approval on risky

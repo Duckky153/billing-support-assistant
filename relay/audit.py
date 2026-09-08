@@ -1,24 +1,15 @@
-"""Hash-chained, deny-by-default-redacted audit log.
+"""Concurrent hash-linked local audit records with allowlisted details.
 
-Every decision the agent makes — every resolved ticket, every escalation, every
-gate block — is appended here. The log is:
-
-* **Append-only and hash-chained.** Each record's ``hash`` covers its own fields
-  plus the previous record's hash. Altering or dropping any record breaks the
-  chain, which ``verify_chain`` detects.
-* **Deny-by-default redacted.** Records never carry raw PII. The :func:`redact`
-  helper keeps only an explicit allowlist of safe, non-identifying fields
-  (amounts, record ids, gate codes) and stringifies them; everything else —
-  emails, names, ticket bodies — is dropped before it can reach a record.
-
-Timestamps are injected (not read from the clock inside this module) so runs are
-reproducible and snapshots are byte-stable.
+Append and snapshots are locked. Hashes detect modified records and broken links,
+not valid-prefix removal or full chain replacement without a trusted checkpoint.
+IDs remain identifiers; real deployments need log access controls.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import threading
 
 from pydantic import BaseModel, ConfigDict
 
@@ -96,14 +87,17 @@ class AuditLog:
 
     def __init__(self) -> None:
         self._records: list[AuditRecord] = []
+        self._lock = threading.RLock()
 
     @property
     def records(self) -> list[AuditRecord]:
-        return list(self._records)
+        with self._lock:
+            return [record.model_copy(deep=True) for record in self._records]
 
     @property
     def head_hash(self) -> str:
-        return self._records[-1].hash if self._records else GENESIS_HASH
+        with self._lock:
+            return self._records[-1].hash if self._records else GENESIS_HASH
 
     def append(
         self,
@@ -118,27 +112,26 @@ class AuditLog:
         detail: dict[str, str],
         timestamp: str,
     ) -> AuditRecord:
-        seq = len(self._records)
-        prev_hash = self.head_hash
-        payload = {
-            "seq": seq,
-            "timestamp": timestamp,
-            "ticket_id": ticket_id,
-            "customer_id": customer_id,
-            "kind": kind,
-            "action_type": action_type,
-            "verdict": verdict,
-            "code": code,
-            "grounded": grounded,
-            "detail": detail,
-            "prev_hash": prev_hash,
-        }
-        record = AuditRecord(hash=_hash_payload(payload), **payload)  # type: ignore[arg-type]
-        self._records.append(record)
-        return record
+        with self._lock:
+            payload = {
+                "seq": len(self._records),
+                "timestamp": timestamp,
+                "ticket_id": ticket_id,
+                "customer_id": customer_id,
+                "kind": kind,
+                "action_type": action_type,
+                "verdict": verdict,
+                "code": code,
+                "grounded": grounded,
+                "detail": redact(dict(detail)),
+                "prev_hash": self.head_hash,
+            }
+            record = AuditRecord(hash=_hash_payload(payload), **payload)  # type: ignore[arg-type]
+            self._records.append(record)
+            return record.model_copy(deep=True)
 
     def to_jsonl(self) -> str:
-        return "\n".join(r.model_dump_json() for r in self._records)
+        return "\n".join(r.model_dump_json() for r in self.records)
 
     @classmethod
     def from_jsonl(cls, text: str) -> AuditLog:

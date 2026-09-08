@@ -3,7 +3,7 @@
 Guidance for AI coding tools working in this repo.
 
 ## What this is
-Relay — a safe autonomous customer-support agent. The defining property: **the
+Relay — a local support-agent demo with bounded execution controls. **The
 LLM proposes, it never executes.** Every money/account-touching action passes a
 deny-by-default policy gate and a grounding gate before the store is called.
 

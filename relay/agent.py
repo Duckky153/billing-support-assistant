@@ -1,24 +1,17 @@
-"""The orchestrator — handle one ticket, end to end.
+"""Orchestrate scoped records, proposals, gates, execution, and local handoff.
 
-The pipeline is fixed and the order matters:
-
-    intake → retrieve (scoped) → propose → ground → gate → execute | escalate
-           → audit → respond
-
-* **Retrieve is scoped to the ticket's customer.** The brain only ever sees that
-  customer's records, so it cannot accidentally act across accounts.
-* **The brain proposes; it never executes.** Only this module calls the store,
-  and only after both the grounding gate and the policy gate allow.
-* **Failure is escalation.** Unknown customer, ungrounded proposal, policy block,
-  or a store rejection all converge on the same safe outcome: a human gets a case
-  file, and no money or account state changes.
-
-Every step is an OpenTelemetry span, so a run is observable in any OTLP backend.
+Rejected proposals do not execute. Downstream timeouts or mismatched receipts
+require reconciliation: escalation does not prove that no provider effect occurred.
+Replay state is process-local; identical retries return the original decision.
+No model-answer semantic correctness or production safety guarantee is made.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import json
+import threading
 from collections.abc import Callable
 from enum import StrEnum
 
@@ -33,7 +26,7 @@ from relay.actions import (
 )
 from relay.audit import AuditLog, redact
 from relay.brain import Brain, default_escalation_proposal
-from relay.domain import Ticket
+from relay.domain import SubscriptionStatus, Ticket
 from relay.grounding import GroundingContext, GroundingResult, check_grounding
 from relay.observability import current_trace_id, get_tracer
 from relay.policy import GateDecision, PolicyConfig, PolicyContext, Verdict, decide
@@ -104,8 +97,46 @@ class Agent:
         # An audit log can be shared across agents (e.g. one chain for a whole
         # eval suite) by passing it in; otherwise each agent owns its own.
         self.audit = audit if audit is not None else AuditLog()
+        # Process-local demo replay registry. Serialize intake through completion
+        # so retries cannot re-plan against state changed by their first attempt.
+        self._request_lock = threading.Lock()
+        self._requests: dict[tuple[str, str], tuple[str, TicketResolution]] = {}
 
     def handle(self, ticket: Ticket) -> TicketResolution:
+        key = (ticket.customer_id, ticket.id)
+        fingerprint = hashlib.sha256(
+            ticket.model_dump_json(exclude={"created_at"}).encode()
+        ).hexdigest()
+        with self._request_lock:
+            previous = self._requests.get(key)
+            if previous is not None:
+                if previous[0] == fingerprint:
+                    return previous[1].model_copy(deep=True)
+                proposal = default_escalation_proposal(
+                    ticket.customer_id,
+                    "request ID reused with different content; use a new ID after review",
+                )
+                return self._finish_escalated(
+                    ticket,
+                    proposal,
+                    GroundingResult(
+                        grounded=False, code="not_checked", reason="conflicting replay"
+                    ),
+                    GateDecision(
+                        verdict=Verdict.ESCALATE,
+                        code="request_id_conflict",
+                        reason="conflicting replay",
+                    ),
+                    "request_id_conflict",
+                    "request ID reused with different content; use a new ID after review",
+                    self._clock(),
+                    None,
+                )
+            result = self._handle_once(ticket)
+            self._requests[key] = (fingerprint, result.model_copy(deep=True))
+            return result
+
+    def _handle_once(self, ticket: Ticket) -> TicketResolution:
         tracer = get_tracer()
         with tracer.start_as_current_span("relay.handle_ticket") as span:
             span.set_attribute("ticket.id", ticket.id)
@@ -200,23 +231,45 @@ class Agent:
         if isinstance(action, AnswerAction):
             return False, None
         if isinstance(action, RefundAction):
+            key = self._operation_key(ticket, "refund")
             refund = self.store.issue_refund(
-                action.invoice_id, action.amount_cents, idempotency_key=f"{ticket.id}:refund"
+                action.invoice_id, action.amount_cents, idempotency_key=key
             )
+            if (
+                refund.invoice_id != action.invoice_id
+                or refund.amount_cents != action.amount_cents
+                or refund.idempotency_key != key
+                or refund.refunded_total_cents < action.amount_cents
+            ):
+                raise BillingError(
+                    "refund receipt mismatch; verify downstream state before retrying"
+                )
             return True, {
                 "invoice_id": refund.invoice_id,
                 "amount_cents": str(refund.amount_cents),
                 "refunded_total_cents": str(refund.refunded_total_cents),
             }
         if isinstance(action, CancelAction):
-            cancel = self.store.cancel_subscription(
-                action.subscription_id, idempotency_key=f"{ticket.id}:cancel"
-            )
+            key = self._operation_key(ticket, "cancel")
+            cancel = self.store.cancel_subscription(action.subscription_id, idempotency_key=key)
+            if (
+                cancel.subscription_id != action.subscription_id
+                or cancel.idempotency_key != key
+                or cancel.status is not SubscriptionStatus.CANCELED
+            ):
+                raise BillingError(
+                    "cancellation receipt mismatch; verify downstream state before retrying"
+                )
             return True, {
                 "subscription_id": cancel.subscription_id,
                 "status": cancel.status.value,
             }
         return False, None  # unreachable: closed union, no else: allow
+
+    @staticmethod
+    def _operation_key(ticket: Ticket, operation: str) -> str:
+        scope = json.dumps([ticket.customer_id, ticket.id], separators=(",", ":"))
+        return f"relay:{hashlib.sha256(scope.encode()).hexdigest()}:{operation}"
 
     # --- terminal builders --------------------------------------------------
     def _finish_resolved(

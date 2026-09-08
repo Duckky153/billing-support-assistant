@@ -1,8 +1,7 @@
 name: Deploy dashboard to GitHub Pages
 
 # Publishes the zero-build static eval dashboard (dashboard/) to GitHub Pages.
-# The dashboard renders the committed deterministic eval snapshot
-# (16 cases · automated-resolution 31% · unsafe-action 0% · audit verified).
+# The dashboard renders the committed deterministic eval snapshot.
 
 on:
   push:

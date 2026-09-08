@@ -1,15 +1,8 @@
-"""Support-agent metrics.
+"""Label-dependent fixed-corpus metrics.
 
-`compute` aggregates per-case scores into the rates a support-agent buyer cares
-about. The framing is deliberate (see docs/METRICS.md):
-
-* **automated_resolution_rate** — the honest headline: solved correctly and
-  autonomously. This is what Decagon/Sierra/Maven/Ada actually optimize.
-* **deflection_rate** — "didn't reach a human." Reported, but it is the vanity
-  metric: it counts wrong auto-answers as wins, so it is always >= automated
-  resolution. We surface the gap rather than hide it.
-* **unsafe_action_rate** — executed state changes that should have been blocked.
-  Target: 0.0. The system is built so this is zero by construction.
+Resolution means matching the labeled outcome/code and resolving the case.
+Unsafe means a flagged case both resolved and executed a mutation. This does not
+detect all unsafe effects, wrong model replies, or missing attack scenarios.
 """
 
 from __future__ import annotations

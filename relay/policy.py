@@ -1,20 +1,8 @@
-"""The fail-closed action policy gate — Relay's safety core.
+"""Pure, deny-by-default action policy.
 
-`decide(action, ctx)` is a pure, deterministic, **deny-by-default** function.
-It begins from "not authorized" and only returns :attr:`Verdict.ALLOW` when a
-specific allow-rule matches and no deny-rule fires. There is deliberately no
-``else: allow`` in this module: every code path that is not an explicit,
-fully-checked allow returns :attr:`Verdict.ESCALATE`.
-
-The gate does not trust the brain. The brain proposes an action and asserts its
-own grounding; the gate independently re-checks every load-bearing fact —
-ownership, amount, refund window, invoice status, confidence, topic sensitivity
-— against the real records in :class:`PolicyContext`. "The model said so" is
-never an authorization.
-
-The brain only ever *requests* a refund within policy; the cap, window, and
-ownership checks are enforced here in code, where no amount of prompt injection
-in a ticket can reach them.
+Billing ownership, amount, window, status, and the bounded request contract are
+checked independently of the model. Confidence and sensitivity remain supplied
+flags, not verified facts. Unknown mutation requests require human confirmation.
 """
 
 from __future__ import annotations
@@ -31,6 +19,7 @@ from relay.actions import (
     ProposedAction,
     RefundAction,
 )
+from relay.authorization import authorizes
 from relay.domain import Customer, Invoice, InvoiceStatus, Subscription, Ticket
 
 
@@ -161,7 +150,12 @@ def _decide_refund(action: RefundAction, ctx: PolicyContext) -> GateDecision:
             "refund_outside_window",
             f"invoice {age_days}d old, past the {ctx.config.refund_window_days}d refund window",
         )
-    return _allow("refund_ok", "refund is within cap, window, remaining balance, and ownership")
+    if not authorizes(ctx.ticket.body, action, ctx.invoices, ctx.subscriptions):
+        return _escalate(
+            "mutation_not_authorized",
+            "request does not explicitly authorize this refund; human confirmation required",
+        )
+    return _allow("refund_ok", "explicit refund request within cap, window, balance, and ownership")
 
 
 def _decide_cancel(action: CancelAction, ctx: PolicyContext) -> GateDecision:
@@ -183,4 +177,9 @@ def _decide_cancel(action: CancelAction, ctx: PolicyContext) -> GateDecision:
         return _escalate(
             "subscription_not_active", f"subscription {action.subscription_id!r} is {sub.status}"
         )
-    return _allow("cancel_ok", "subscription is active and owned by this customer")
+    if not authorizes(ctx.ticket.body, action, ctx.invoices, ctx.subscriptions):
+        return _escalate(
+            "mutation_not_authorized",
+            "request does not explicitly authorize this cancellation; human confirmation required",
+        )
+    return _allow("cancel_ok", "explicit cancellation request for an active, owned subscription")

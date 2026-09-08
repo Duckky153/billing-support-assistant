@@ -1,72 +1,67 @@
-# The fail-closed action contract
+# Local execution contract
 
-Relay's safety rests on a small set of invariants. They are enforced in code and
-checked by tests; this document states them so a reviewer can audit the claim.
+The checks below are tested controls with explicit limits, not a guarantee that
+arbitrary model output or customer language is safe.
 
-## INV-1 — The brain cannot execute
+## Independent mutation authorization
 
-The brain returns data (`AgentProposal`), never an effect. The only code that
-calls a mutating store method is `Agent._execute`, reached only after both gates
-allow. *Tested:* every escalation path in `test_agent.py` asserts the store is
-unchanged.
+Both MockBrain and ClaudeBrain proposals pass through `policy.decide`.
+A refund or cancellation must pass ownership, grounding, billing eligibility,
+confidence/sensitivity gates, and `authorization.authorizes`.
 
-## INV-2 — Deny-by-default authorization
+Authorization matches the whole request against a deliberately small grammar.
+It does not take the model's claimed intent as permission. Examples:
 
-`policy.decide` begins from "not authorized" and returns `ALLOW` only when a
-specific allow-rule matches and no deny-rule fires. There is no `else: allow`.
-Every unmatched path returns `ESCALATE`. *Tested:* the full escalate/allow matrix
-in `test_policy.py`, plus a property test that no over-cap amount auto-executes.
+| Request | Meaning in the sample workflow |
+| --- | --- |
+| Please refund invoice in_ada1. | Refund that invoice's remaining balance, subject to all gates. |
+| Please refund $5.00 on invoice in_ada1. | Refund exactly 500 cents on that invoice. |
+| Please refund me. | Refund the remaining balance of the latest paid, refundable invoice. |
+| Please cancel my subscription. | Cancel the one active subscription immediately. Multiple active subscriptions need an explicit target. |
+| Please cancel subscription sub_ada. | Cancel that subscription, subject to ownership and status. |
+| Refund / Please refund. | Underspecified; hand off. |
+| How do I cancel? / Do not cancel… / Cancel if… | No mutation authorization. |
+| Refund and cancel / quoted commands / unknown prose | Unsupported; hand off. |
 
-## INV-3 — Authorization is independent of the model
+Common polite forms and brief duplicate-charge context are supported. This is
+not a semantic classifier; longer legitimate requests may also need review.
+Named amounts and targets must match the proposed action exactly. A changed
+invoice ID, amount, or action type is not authorized by a different valid request.
 
-Refund cap, refund window, invoice-paid status, and ownership are checked against
-the records in `PolicyContext`, not against anything the brain asserts. A prompt
-injection in a ticket body cannot change them because it never reaches them.
-*Tested:* `test_injection_*` cases drive a compromised proposal and still escalate.
+## Records and execution
 
-## INV-4 — Ground before acting
+- Grounding checks cited record existence/ownership and requires a stated evidence
+  note and the target citation for mutations. It does not prove the evidence prose.
+- Policy independently checks paid status, remaining balance, cap, window, and
+  subscription ownership/status. Confidence and sensitivity are still model flags.
+- Only the executor calls the billing store. It checks that the returned receipt
+  matches the approved target, amount, key, and cancellation status.
+- A rejected proposal has no execution call. A downstream timeout or bad receipt
+  may follow an actual provider effect: the response is a handoff, not proof that
+  nothing happened. Verify downstream state before retrying.
 
-A state-changing action must cite a record that (a) exists in the customer's
-scoped records and (b) is the record being changed. Cross-customer and invented
-citations are rejected by `grounding.check_grounding`. *Tested:* the cross-
-customer and ghost-invoice cases in `test_grounding.py` and `test_agent.py`.
+## Replay and concurrency
 
-## INV-5 — Per-customer isolation
+One running Agent binds customer + ticket ID to the complete request payload
+(excluding server-generated creation time). Identical retries return the original
+resolution/audit sequence; changed content yields `request_id_conflict`.
+Different customers have different hashed operation keys. Calls are serialized
+within that Agent; store writes and shared audit appends have their own locks.
 
-Retrieval is scoped to the ticket's customer id, so the brain never holds another
-customer's records, and the grounding gate independently re-verifies ownership of
-every cited id. *Tested:* `test_world_scopes_invoices_per_customer`,
-`test_injection_citing_another_customers_invoice_is_blocked`.
+The stores reject a reused operation key with a different target or amount.
+The Stripe-like adapter retains uncertain attempts rather than blindly retrying.
+All these registries are process-local: there is no durable or multi-worker
+exactly-once guarantee, and no automatic eviction/reconciliation service.
 
-## INV-6 — Escalation is always safe
+## Audit and trust limits
 
-`EscalateAction` is the one action the gates always allow, because handing a
-ticket to a human changes no state. Unknown customer, low confidence, sensitive
-topic, ungrounded proposal, policy block, and store rejection all converge on
-escalation with a `CaseFile`.
+Audit append and snapshot operations are locked; detail fields are allowlisted
+at append. IDs are still identifiers, so real logs require access controls.
+Hashes detect changed records, interior removal, and broken sequence/linkage.
+A valid prefix or a completely rewritten chain cannot be detected without an
+externally trusted head/checkpoint. The chain is not an immutable external ledger.
 
-## INV-7 — The store cannot be over-driven
-
-Even if both gates were wrong, `store.issue_refund` refuses to refund more than an
-invoice's remaining balance and is idempotent by key; `BillingError` fails closed
-to escalation. *Tested:* `test_store.py`, `test_store_rejection_fails_closed_to_escalation`.
-
-## INV-8 — Every decision is audited and tamper-evident
-
-Each resolution/escalation appends one record to a hash chain; `verify_chain`
-detects any alteration or removal. Records are deny-by-default redacted — PII
-never enters them. *Tested:* `test_audit.py`,
-`test_each_handled_ticket_appends_one_verifiable_audit_record`.
-
----
-
-## What is *not* claimed
-
-This is a guarantee about the **action layer**, not about model text. Relay
-guarantees the agent cannot *do* an unsafe thing (refund, cancel, leak another
-account's records). It does not guarantee the model never *says* something wrong
-in a customer reply — answer text is the model's, gated only by confidence and
-topic-sensitivity. See [HONESTY.md](HONESTY.md). The honest framing, borrowed
-from Sierra's "bounded error rate": treat reliability as a measured property with
-a guaranteed floor at the action layer and best-effort filtering above it — not
-as "100% safe."
+The HTTP demo trusts `customer_id`. Production must supply authenticated identity.
+Arbitrary model AnswerAction prose is not semantically checked: a confident wrong
+answer can pass with valid citations. A regression test pins this limitation.
+The static browser has no billing executor, durable audit, sender, or case queue.

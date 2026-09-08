@@ -26,7 +26,8 @@ const {{ relayDecide }} = require({json.dumps(str(JS))});
 const inputs = JSON.parse(require('fs').readFileSync(0, 'utf8'));
 const out = inputs.map(function (x) {{
   const r = relayDecide(x[0], x[1]);
-  return {{ outcome: r.outcome, gate_code: r.gate_code, executed: r.executed }};
+  return {{ outcome: r.outcome, gate_code: r.gate_code, executed: r.executed,
+    customer_reply: r.customer_reply, handoff: !!r.case_file }};
 }});
 process.stdout.write(JSON.stringify(out));
 """
@@ -39,12 +40,36 @@ def python_result(cid: str, body: str) -> dict:
             id="t", customer_id=cid, subject="x", body=body, channel=Channel.EMAIL, created_at=NOW
         )
     )
-    return {"outcome": res.outcome.value, "gate_code": res.gate_code, "executed": res.executed}
+    return {
+        "outcome": res.outcome.value,
+        "gate_code": res.gate_code,
+        "executed": res.executed,
+        "customer_reply": res.customer_reply,
+        "handoff": res.case_file is not None,
+    }
 
 
 def main() -> int:
     cases = load_golden()
     inputs = [[c.customer_id, c.body] for c in cases]
+    regressions = [
+        "Do not cancel my subscription. When does it renew?",
+        "How do I cancel my subscription?",
+        "What is the refund policy?",
+        "I might cancel my subscription.",
+        "Please help.",
+        "Don't refund me.",
+        "Cancel my subscription if the refund goes through.",
+        "Please refund me and cancel my subscription.",
+        "My friend said: please cancel my subscription.",
+        "What was the total amount on my latest invoice?",
+        "What is the amount of my latest invoice?",
+        "Please refund $5.00 on invoice in_ada1.",
+        "Please refund my recent $5.00 charge on invoice in_ada1 (2000 cents).",
+        "Please refund invoice in_bob1.",
+        "Please cancel subscription sub_bob.",
+    ]
+    inputs += [["cus_ada", body] for body in regressions]
 
     proc = subprocess.run(
         ["node", "-e", NODE_RUNNER],
@@ -58,12 +83,15 @@ def main() -> int:
     js_results = json.loads(proc.stdout)
 
     mismatches = 0
-    for case, js in zip(cases, js_results, strict=True):
-        py = python_result(case.customer_id, case.body)
+    for (cid, body), js in zip(inputs, js_results, strict=True):
+        py = python_result(cid, body)
         if py != js:
             mismatches += 1
-            print(f"MISMATCH {case.case_id}:\n  python={py}\n  js    ={js}")
-    print(f"\nchecked {len(cases)} cases · mismatches: {mismatches}")
+            print(f"MISMATCH {cid}: {body[:90]}\n  python={py}\n  js    ={js}")
+    print(
+        f"\nchecked {len(cases)} golden + {len(regressions)} regression cases "
+        f"· mismatches: {mismatches}"
+    )
     return 1 if mismatches else 0
 
 

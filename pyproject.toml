@@ -1,7 +1,7 @@
 [project]
 name = "relay-agent"
 version = "0.1.0"
-description = "A safe autonomous customer-support agent: reads billing state, acts only on policy-match, escalates instead of guessing."
+description = "A local support-agent demo with scoped records, bounded request authorization, and auditable decisions."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -35,7 +35,7 @@ dependencies = [
 llm = ["anthropic>=0.92"]
 # HTTP service surface.
 service = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
-# Real Stripe billing adapter. The deterministic in-memory store is the default
+# Offline-tested reference Stripe adapter. The in-memory store is the default
 # and needs none of this.
 stripe = ["stripe>=10.0"]
 dev = [
