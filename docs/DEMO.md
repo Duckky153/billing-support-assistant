@@ -1,4 +1,17 @@
-# Local walkthrough
+# How to use Relay
+
+Open the [public page](https://duckky153.github.io/relay/) and choose a ticket preset. Select **Run safety check**, then read the proposed action, record check, policy check and reason.
+
+- **Valid refund:** the request matches the sample customer's invoice and allowed refund amount.
+- **Cross-customer trick:** the cited invoice belongs to someone else, so the request is held.
+- **Over-limit refund:** the record exists but the refund exceeds the policy limit.
+- **Account question:** the reply uses the account's recorded renewal details.
+
+If a request is held, read the review packet. It preserves the reason and proposed action for a person to assess. Changing the customer or ticket clears the earlier decision. Run the check again to review the new input.
+
+The browser uses fixed offline rules and sample records. It sends no reply, routes no case and changes no billing record. The separate local workflow below exercises an in-memory sample store.
+
+## Local walkthrough
 
 The story: an agent proposes; record checks and an explicit-request contract
 control local billing actions. Everything here uses sample data.

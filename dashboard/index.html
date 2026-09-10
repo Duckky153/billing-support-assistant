@@ -109,14 +109,14 @@
 <body>
   <nav><div class="wrap">
     <span class="brand">Relay</span>
-    <div class="nav-right"><a href="https://github.com/Duckky153/relay">View source</a></div>
+    <div class="nav-right"><a href="https://github.com/Duckky153/relay/blob/main/docs/DEMO.md">How to use Relay</a> · <a href="https://github.com/Duckky153/relay">View source</a></div>
   </div></nav>
 
   <header class="hero"><div class="wrap hero-grid">
     <div>
       <p class="eyebrow">Gated AI support decisions</p>
       <h1>AI can propose. Code decides what happens next.</h1>
-      <p class="hero-copy">Relay separates model output from execution. A grounding gate checks the evidence, a policy gate checks the rules, and uncertain cases go to a person.</p>
+      <p class="hero-copy">Relay separates model output from execution. Record checks and policy rules control which proposals can proceed. Unsupported requests produce a packet for human review.</p>
       <a class="primary" href="#try">Try a ticket</a>
     </div>
   </div></header>
@@ -132,7 +132,7 @@
     <section class="panel" id="try">
       <div class="section-head">
         <div><p class="eyebrow">Interactive workflow</p><h2>Run one support ticket</h2></div>
-        <p>Choose a preset or edit the ticket to see the decision path.</p>
+        <p>Choose a request or write your own to see the decision and the checks behind it.</p>
       </div>
       <div class="demo-grid">
         <div class="input-card">
@@ -159,10 +159,10 @@
             <div class="trace-row"><span>Policy gate</span><strong class="code" id="result-policy">—</strong></div>
             <div class="trace-row"><span>State change approved</span><strong id="result-executed">—</strong></div>
             <div class="trace-row"><span>Reason</span><strong id="result-reason">—</strong></div>
-            <div class="trace-row"><span>Customer reply</span><strong id="result-reply">—</strong></div>
+            <div class="trace-row"><span>Reply draft</span><strong id="result-reply">—</strong></div>
             <div class="trace-row"><span>Review packet</span><strong id="result-handoff" style="white-space: pre-line">—</strong></div>
           </div>
-          <p class="result-note">This page previews decisions on sample records. It does not contact billing or send replies or review packets. Supported short requests only; other wording goes to review.</p>
+          <p class="result-note">Running a check shows the decision and prepares a reply or review packet. It does not change billing or send a message.</p>
         </div>
       </div>
     </section>
@@ -178,7 +178,7 @@
         <article class="step" role="listitem"><span class="step-no">03</span><b>Propose</b><p>The model suggests an answer or action.</p></article>
         <article class="step" role="listitem"><span class="step-no">04 · GATE</span><b>Grounding</b><p>Every cited record must exist and belong to the customer.</p></article>
         <article class="step" role="listitem"><span class="step-no">05 · GATE</span><b>Policy</b><p>Caps, windows, ownership, and allowed actions live in code.</p></article>
-        <article class="step" role="listitem"><span class="step-no">06</span><b>Resolve or review</b><p>Approve the action or send the reason to a person.</p></article>
+        <article class="step" role="listitem"><span class="step-no">06</span><b>Resolve or review</b><p>Approve the action or prepare the reason for human review.</p></article>
       </div>
     </section>
 
