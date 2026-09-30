@@ -1,16 +1,39 @@
 # Billing Support Assistant
 
-A local support-agent demo with controlled billing records. A model proposes an
-answer, refund, cancellation, or handoff. Python checks cited records, ownership,
-billing limits, and a small explicit-request grammar before allowing a mutation.
+A demo AI support assistant for a subscription business. It answers billing
+questions and handles refund and cancellation requests. It is built for support
+teams that want AI help on routine tickets without letting the AI move money on
+its own: code checks each proposed refund or cancellation against the customer's
+own records and the billing rules, and anything unclear goes to a person.
+
+**Live demo: [duckky153.github.io/billing-support-assistant](https://duckky153.github.io/billing-support-assistant/)**
+(on this page, fixed rules stand in for the AI model; nothing is sent or charged).
+
+- **64 test tickets:** 7 resolved automatically, 57 sent to human review, and
+  0 unsafe account changes under the test labels. 40 of the 64 are built so that
+  resolving them would be unsafe (for example, another customer's invoice, an
+  over-limit refund, or a prompt-injection attempt).
+- **179 automated Python tests**, plus a check that the live page and the Python
+  code reach the same decision on 79 tickets (the 64 test tickets and 15 extra cases).
+- **Every decision goes into a hash-chained audit log.** The 64-ticket run's chain
+  verifies (64 records).
+- **Sample data only, no real users.** The Claude model path and a Stripe-style
+  adapter are built and tested with stand-in responses, but neither was run live.
+
+Built with AI assistance (Claude Code and Codex).
+
+## How it works
 
 ```
 intake → scoped records → proposal → grounding → policy → execute or handoff
        → audit record → response
 ```
 
-The offline path uses a deterministic `MockBrain`; `ClaudeBrain` accepts structured
-model output through the same execution gates. This is not a live support service.
+A model proposes an answer, refund, cancellation, or handoff. Python checks cited
+records, ownership, billing limits, and a small explicit-request grammar before
+allowing a mutation. The offline path uses a deterministic `MockBrain`;
+`ClaudeBrain` accepts structured model output through the same execution gates.
+This is not a live support service.
 
 ## What works locally
 
@@ -38,12 +61,7 @@ This is an adversarial-heavy regression corpus, not representative traffic.
 eval: 64 cases · automated-resolution 11% · unsafe-action 0% · audit verified=True
 ```
 
-The September 8 audit found that earlier labels counted irrelevant answers and
-ignored request constraints as resolutions. The previous 15/64 result is not a
-valid comparison of customer problems solved. The corpus bodies remain unchanged;
-44 expected outcome/code pairs changed. See the
-[audit and label history](docs/2026-09-08-WORKFLOW-AUDIT.md) and
-[metric limitations](docs/HONESTY.md).
+Why the labels changed on September 8 is under [Label history](#label-history).
 
 ## Run it
 
@@ -70,7 +88,7 @@ and **must not be exposed as an authenticated production service**.
 
 Python, Pydantic, OpenTelemetry, FastAPI, and an optional Anthropic structured-output
 client. Real-model runs require a key and incur provider usage; no real-model run
-was performed for this repair.
+has been performed.
 
 The Stripe-like adapter is a reference seam tested with injected offline fakes.
 It validates refund amount/charge/status and cancellation identity/status,
@@ -78,6 +96,15 @@ binds local replay keys, and stops on uncertain responses. It is not a verified
 current Stripe deployment: durable replay, charge-level reconciliation, current
 API-version mappings, pagination, authentication, and operational controls remain
 production work. [Details and primary references](docs/HONESTY.md).
+
+## Label history
+
+The September 8 audit found that earlier labels counted irrelevant answers and
+ignored request constraints as resolutions. The previous 15/64 result is not a
+valid comparison of customer problems solved. The corpus bodies remain unchanged;
+44 expected outcome/code pairs changed. See the
+[audit and label history](docs/2026-09-08-WORKFLOW-AUDIT.md) and
+[metric limitations](docs/HONESTY.md).
 
 ## Verification and docs
 
