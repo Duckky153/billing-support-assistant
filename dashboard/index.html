@@ -34,6 +34,7 @@
     .hero .eyebrow { color: #89a6e9; }
     h1 { max-width: 800px; margin: 0; font-size: clamp(42px, 6vw, 70px); line-height: 1.02; letter-spacing: -.045em; }
     .hero-copy { max-width: 720px; margin: 22px 0 0; color: #c0cdeb; font-size: 18px; line-height: 1.6; }
+    .hero-note { max-width: 720px; margin: 12px 0 0; color: #c0cdeb; font-size: 14px; line-height: 1.5; }
     .primary { display: inline-flex; margin-top: 24px; border: 0; border-radius: 9px; background: #fff; color: var(--navy); font-weight: 800; padding: 11px 15px; text-decoration: none; cursor: pointer; }
 
     main { padding: 24px 0 54px; }
@@ -117,6 +118,7 @@
       <p class="eyebrow">Gated AI support decisions</p>
       <h1>AI can propose. Code decides what happens next.</h1>
       <p class="hero-copy">Billing Support Assistant separates model output from execution. Record checks and policy rules control which proposals can proceed. Unsupported requests produce a packet for human review.</p>
+      <p class="hero-note">On this page, fixed rules stand in for the AI model. The model path is built but was not run live.</p>
       <a class="primary" href="#try">Try a ticket</a>
     </div>
   </div></header>
@@ -175,7 +177,7 @@
       <div class="pipeline" role="list" aria-label="Billing Support Assistant decision pipeline">
         <article class="step" role="listitem"><span class="step-no">01</span><b>Ticket</b><p>Receive one request tied to one customer.</p></article>
         <article class="step" role="listitem"><span class="step-no">02</span><b>Retrieve</b><p>Load only that customer's records.</p></article>
-        <article class="step" role="listitem"><span class="step-no">03</span><b>Propose</b><p>The model suggests an answer or action.</p></article>
+        <article class="step" role="listitem"><span class="step-no">03</span><b>Propose</b><p>The assistant suggests an answer or action.</p></article>
         <article class="step" role="listitem"><span class="step-no">04 · GATE</span><b>Grounding</b><p>Every cited record must exist and belong to the customer.</p></article>
         <article class="step" role="listitem"><span class="step-no">05 · GATE</span><b>Policy</b><p>Caps, windows, ownership, and allowed actions live in code.</p></article>
         <article class="step" role="listitem"><span class="step-no">06</span><b>Resolve or review</b><p>Approve the action or prepare the reason for human review.</p></article>
