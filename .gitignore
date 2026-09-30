@@ -32,3 +32,8 @@ dashboard/.vercel/
 
 # Local agent runs (reports are committed selectively under results/)
 /tmp-runs/
+
+# Local AI-tool instructions stay out of the public repo
+CLAUDE.md
+AGENTS.md
+.claude/
