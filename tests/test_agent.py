@@ -205,7 +205,7 @@ def test_store_rejection_fails_closed_to_escalation() -> None:
 
 
 def test_brain_exception_fails_closed_to_escalation() -> None:
-    """Regression for the Codex gate: a brain that raises must escalate, not crash.
+    """Regression from a code review: a brain that raises must escalate, not crash.
 
     "Failure is escalation" is the orchestrator's invariant. A buggy/custom brain
     (or an unhandled SDK error) that throws must degrade to a safe escalation —
@@ -233,7 +233,7 @@ def test_brain_exception_fails_closed_to_escalation() -> None:
 
 
 def test_brain_returning_a_malformed_object_fails_closed_to_escalation() -> None:
-    """Regression for the Codex re-confirm: a brain that returns a non-raising
+    """Regression from a code review: a brain that returns a non-raising
     malformed object (not an AgentProposal) must escalate, not crash downstream
     on `proposal.intent`/`proposal.action`."""
 

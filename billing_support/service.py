@@ -86,7 +86,7 @@ def create_app(agent: Agent | None = None) -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     def index() -> str:
-        # A bare GET / from a recruiter must explain the service and link to the
+        # A bare GET / from a visitor must explain the service and link to the
         # interactive /docs demo — never a raw {"detail":"Not Found"}.
         return _LANDING_HTML
 

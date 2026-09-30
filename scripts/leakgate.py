@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Independent leak-gate scanner for the Billing Support Assistant public repository.
 
-Billing Support Assistant is a standalone, public, portfolio-grade project. It must never contain
+Billing Support Assistant is a standalone, public project. It must never contain
 the author's personal data or any cross-contamination
 from private sibling projects. This scanner runs in CI and as a pre-push hook;
 it exits non-zero (failing the build / blocking the push) if anything banned

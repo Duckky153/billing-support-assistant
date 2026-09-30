@@ -12,7 +12,7 @@ def test_healthz() -> None:
 
 
 def test_root_landing_page_is_helpful_html() -> None:
-    # A recruiter pasting the bare service URL does GET / — it must explain
+    # A visitor pasting the bare service URL does GET / — it must explain
     # itself and link to the interactive docs, not return {"detail":"Not Found"}.
     client = TestClient(create_app())
     r = client.get("/")

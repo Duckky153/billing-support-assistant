@@ -169,7 +169,7 @@ def test_cancel_unknown_subscription_raises() -> None:
 
 
 def test_concurrent_full_refunds_never_overdraw_one_invoice() -> None:
-    """Regression for the Codex gate: the check-then-write must be atomic.
+    """Regression from a code review: the check-then-write must be atomic.
 
     `in_1` holds $20.00. Many threads each try to refund the *full* $20.00 with a
     distinct idempotency key — i.e. genuinely distinct refund attempts, not

@@ -19,11 +19,9 @@ npx serve dashboard                         # or any static server; or open inde
 
 ## Deploy it
 
-Any static host. For example:
-
-```bash
-npx vercel deploy --prod dashboard          # or push dashboard/ to GitHub Pages
-```
+`.github/workflows/pages.yml` publishes `dashboard/` to GitHub Pages when a push
+to `main` changes it. The live copy is at
+https://duckky153.github.io/billing-support-assistant/. Any static host also works.
 
 `report-data.js` embeds the report as `window.BILLING_SUPPORT_REPORT`, so the page works
 from a static host and from `file://` with no fetch/CORS step. Regenerate it

@@ -98,7 +98,7 @@ def _cmd_serve(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="billing_support", description="Safe autonomous customer-support agent."
+        prog="billing_support", description="Local billing support-agent demo on sample data."
     )
     sub = p.add_subparsers(dest="command", required=True)
 

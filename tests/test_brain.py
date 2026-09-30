@@ -210,7 +210,7 @@ def test_claude_brain_falls_back_to_escalation_when_parse_returns_none() -> None
 def test_claude_brain_fails_closed_when_the_model_call_raises() -> None:
     """A transport/SDK error (timeout, rate limit, auth) escalates — never crashes.
 
-    Regression for the Codex gate: previously only `parsed_output is None` was
+    Regression from a code review: previously only `parsed_output is None` was
     handled, so an exception from `messages.parse` propagated as a 500 instead of
     degrading to a safe escalation.
     """
