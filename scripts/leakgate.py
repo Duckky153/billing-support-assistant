@@ -19,19 +19,31 @@ or run before the package is installable.
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+
 # --- Banned terms -----------------------------------------------------------
-# Distinctive identifiers tied to the author or to private sibling projects.
-# Chosen to be specific enough that they never collide with legitimate
-# customer-support / agent vocabulary. Matched case-insensitively on word
-# boundaries.
-BANNED_TERMS: tuple[str, ...] = (
-)
+# Distinctive identifiers tied to the author or to private sibling projects are
+# kept out of this public file. They are read from a private, untracked list:
+# $LEAKGATE_TERMS_FILE, or ~/.config/leakgate/terms.txt (one term per line;
+# "#" starts a comment). Without that file only the generic secret patterns
+# below run. Terms are matched case-insensitively on word boundaries.
+def _load_banned_terms() -> tuple[str, ...]:
+    default = Path.home() / ".config" / "leakgate" / "terms.txt"
+    path = Path(os.environ.get("LEAKGATE_TERMS_FILE", str(default)))
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ()
+    return tuple(t.strip().lower() for t in lines if t.strip() and not t.strip().startswith("#"))
+
+
+BANNED_TERMS: tuple[str, ...] = _load_banned_terms()
 
 # --- Regex patterns ---------------------------------------------------------
 # Generic secret / PII shapes that should never be committed.
@@ -45,8 +57,8 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("USCIS A-number", re.compile(r"\bA\d{8,9}\b")),
 )
 
-# Files that are allowed to contain otherwise-banned tokens (this scanner
-# itself names the banned terms, by necessity).
+# Files that are allowed to contain otherwise-flagged tokens (this scanner's
+# own pattern definitions).
 PATH_ALLOWLIST: frozenset[str] = frozenset(
     {
         "scripts/leakgate.py",
@@ -165,6 +177,8 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(argv[0]).resolve() if argv else Path.cwd()
     findings = scan_repo(root)
     if not findings:
+        if not BANNED_TERMS:
+            print("leakgate: note — no private term list found; ran secret checks only.")
         print("leakgate: clean — no banned terms or secrets in tracked files.")
         return 0
     print(f"leakgate: FAILED — {len(findings)} finding(s):", file=sys.stderr)
