@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light only">
-  <title>Relay — gated AI support decisions</title>
+  <title>Billing Support Assistant — gated AI support decisions</title>
   <meta name="description" content="An interactive support workflow with grounding and policy gates between model output and action.">
   <style>
     :root {
@@ -108,15 +108,15 @@
 </head>
 <body>
   <nav><div class="wrap">
-    <span class="brand">Relay</span>
-    <div class="nav-right"><a href="https://github.com/Duckky153/relay/blob/main/docs/DEMO.md">How to use Relay</a> · <a href="https://github.com/Duckky153/relay">View source</a></div>
+    <span class="brand">Billing Support Assistant</span>
+    <div class="nav-right"><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/DEMO.md">How to use Billing Support Assistant</a> · <a href="https://github.com/Duckky153/billing-support-assistant">View source</a></div>
   </div></nav>
 
   <header class="hero"><div class="wrap hero-grid">
     <div>
       <p class="eyebrow">Gated AI support decisions</p>
       <h1>AI can propose. Code decides what happens next.</h1>
-      <p class="hero-copy">Relay separates model output from execution. Record checks and policy rules control which proposals can proceed. Unsupported requests produce a packet for human review.</p>
+      <p class="hero-copy">Billing Support Assistant separates model output from execution. Record checks and policy rules control which proposals can proceed. Unsupported requests produce a packet for human review.</p>
       <a class="primary" href="#try">Try a ticket</a>
     </div>
   </div></header>
@@ -172,7 +172,7 @@
         <div><p class="eyebrow">Decision path</p><h2>Six steps, two hard gates</h2></div>
         <p>The model can suggest an action, but it cannot bypass customer-record checks or policy rules.</p>
       </div>
-      <div class="pipeline" role="list" aria-label="Relay decision pipeline">
+      <div class="pipeline" role="list" aria-label="Billing Support Assistant decision pipeline">
         <article class="step" role="listitem"><span class="step-no">01</span><b>Ticket</b><p>Receive one request tied to one customer.</p></article>
         <article class="step" role="listitem"><span class="step-no">02</span><b>Retrieve</b><p>Load only that customer's records.</p></article>
         <article class="step" role="listitem"><span class="step-no">03</span><b>Propose</b><p>The model suggests an answer or action.</p></article>
@@ -185,7 +185,7 @@
   </div></main>
 
   <script src="report-data.js"></script>
-  <script src="relay-demo.js?v=5"></script>
+  <script src="billing-support-demo.js?v=5"></script>
   <script>
     const PRESETS = {
       trick: { customer: "cus_ada", ticket: "Please refund invoice in_bob1." },
@@ -206,7 +206,7 @@
     }
 
     function runTicket() {
-      const result = window.RelayDemo.relayDecide(document.querySelector("#customer").value, document.querySelector("#ticket").value);
+      const result = window.BillingSupportDemo.billingSupportDecide(document.querySelector("#customer").value, document.querySelector("#ticket").value);
       const resolved = result.outcome === "resolved";
       const groundingFailed = result.grounding_code && result.grounding_code !== "ok" && result.grounding_code !== "n/a";
       document.querySelector("#result-title").textContent = resolved ? "Would resolve automatically" : "Needs human review";
@@ -237,7 +237,7 @@
     }
 
     function loadReport() {
-      const report = window.RELAY_REPORT;
+      const report = window.BILLING_SUPPORT_REPORT;
       const metrics = report.metrics;
       document.querySelector("#metric-total").textContent = metrics.total;
       document.querySelector("#metric-resolved").textContent = metrics.total - metrics.escalated;
@@ -245,7 +245,7 @@
     }
 
     const customer = document.querySelector("#customer");
-    customer.innerHTML = Object.values(window.RelayDemo.CUSTOMERS).map(item => `<option value="${item.id}">${item.name} · ${item.id}</option>`).join("");
+    customer.innerHTML = Object.values(window.BillingSupportDemo.CUSTOMERS).map(item => `<option value="${item.id}">${item.name} · ${item.id}</option>`).join("");
     document.querySelectorAll(".preset").forEach(button => button.addEventListener("click", () => { applyPreset(button.dataset.preset); runTicket(); }));
     document.querySelector("#run").addEventListener("click", runTicket);
     document.querySelector("#ticket").addEventListener("input", invalidateResult);

@@ -11,10 +11,10 @@ from __future__ import annotations
 import re
 from typing import Any, Protocol, runtime_checkable
 
-from relay.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
-from relay.authorization import mutation_request, normalize
-from relay.domain import Customer, Invoice, InvoiceStatus, Subscription, Ticket, dollars
-from relay.proposal import AgentProposal, Grounding, Intent
+from billing_support.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
+from billing_support.authorization import mutation_request, normalize
+from billing_support.domain import Customer, Invoice, InvoiceStatus, Subscription, Ticket, dollars
+from billing_support.proposal import AgentProposal, Grounding, Intent
 
 _INVOICE_RE = re.compile(r"\bin_[A-Za-z0-9]+\b")
 _SUB_RE = re.compile(r"\bsub_[A-Za-z0-9]+\b")
@@ -271,7 +271,7 @@ class MockBrain:
 
 
 _SYSTEM_PROMPT = """\
-You are Relay, an autonomous customer-support agent for a subscription business.
+You are Billing Support Assistant, an autonomous customer-support agent for a subscription business.
 You resolve a ticket by proposing exactly one action: answer, refund,
 cancel_subscription, or escalate.
 
@@ -329,7 +329,7 @@ def _default_client() -> Any:
         import anthropic
     except ImportError as exc:  # pragma: no cover - exercised only without the extra
         raise RuntimeError(
-            "ClaudeBrain needs the 'llm' extra: pip install 'relay-agent[llm]'"
+            "ClaudeBrain needs the 'llm' extra: pip install 'billing-support-assistant[llm]'"
         ) from exc
     return anthropic.Anthropic()
 

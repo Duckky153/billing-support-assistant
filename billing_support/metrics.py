@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from relay.agent import Outcome
+from billing_support.agent import Outcome
 
 
 class CaseScore(BaseModel):

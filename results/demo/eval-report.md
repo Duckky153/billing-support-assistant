@@ -1,4 +1,4 @@
-# Relay eval report (mock)
+# Billing Support Assistant eval report (mock)
 
 - generated: `2025-02-01T00:00:00+00:00`
 - cases: **64**

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Independent leak-gate scanner for the Relay public repository.
+"""Independent leak-gate scanner for the Billing Support Assistant public repository.
 
-Relay is a standalone, public, portfolio-grade project. It must never contain
+Billing Support Assistant is a standalone, public, portfolio-grade project. It must never contain
 the author's personal data or any cross-contamination
 from private sibling projects. This scanner runs in CI and as a pre-push hook;
 it exits non-zero (failing the build / blocking the push) if anything banned
@@ -13,7 +13,7 @@ Design goals:
   * Generic secret detection (API keys, private-key headers, AWS keys).
   * Zero third-party dependencies — runs anywhere Python 3.11+ runs.
 
-It is intentionally standalone (no relay package import) so it can be vendored
+It is intentionally standalone (no billing_support package import) so it can be vendored
 or run before the package is installable.
 """
 

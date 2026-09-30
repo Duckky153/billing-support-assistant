@@ -1,4 +1,4 @@
-# Relay
+# Billing Support Assistant
 
 A local support-agent demo with controlled billing records. A model proposes an
 answer, refund, cancellation, or handoff. Python checks cited records, ownership,
@@ -49,11 +49,11 @@ valid comparison of customer problems solved. The corpus bodies remain unchanged
 
 ```bash
 pip install -e ".[dev,service,llm]"
-relay run "Please refund invoice in_ada1." --customer cus_ada
-relay run "Please refund invoice in_bob1." --customer cus_ada
-relay run "When does my plan renew?" --customer cus_ada
-relay eval --out results/demo
-relay verify-chain results/demo/audit.jsonl
+billing-support run "Please refund invoice in_ada1." --customer cus_ada
+billing-support run "Please refund invoice in_bob1." --customer cus_ada
+billing-support run "When does my plan renew?" --customer cus_ada
+billing-support eval --out results/demo
+billing-support verify-chain results/demo/audit.jsonl
 python scripts/build_dashboard_data.py
 python -m http.server 8768 --bind 127.0.0.1 --directory dashboard
 ```
@@ -63,7 +63,7 @@ routing, or persistent state change. The CLI and local HTTP harness actually
 mutate their in-memory sample store. CLI runs start fresh; HTTP requests share
 state within one running app.
 
-`relay serve` exposes the local HTTP harness. It trusts supplied customer IDs
+`billing-support serve` exposes the local HTTP harness. It trusts supplied customer IDs
 and **must not be exposed as an authenticated production service**.
 
 ## Integration boundaries
@@ -82,8 +82,8 @@ production work. [Details and primary references](docs/HONESTY.md).
 ## Verification and docs
 
 ```bash
-ruff format --check relay tests scripts
-ruff check relay tests scripts
+ruff format --check billing_support tests scripts
+ruff check billing_support tests scripts
 mypy
 pytest -q
 python scripts/check_js_parity.py

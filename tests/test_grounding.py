@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import datetime as dt
 
-from relay.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
-from relay.domain import Invoice, InvoiceStatus, Subscription, SubscriptionStatus
-from relay.grounding import GroundingContext, check_grounding
-from relay.proposal import Grounding
+from billing_support.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
+from billing_support.domain import Invoice, InvoiceStatus, Subscription, SubscriptionStatus
+from billing_support.grounding import GroundingContext, check_grounding
+from billing_support.proposal import Grounding
 
 UTC = dt.UTC
 NOW = dt.datetime(2025, 1, 31, tzinfo=UTC)

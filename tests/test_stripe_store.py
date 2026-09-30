@@ -11,9 +11,9 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from relay.domain import InvoiceStatus, SubscriptionStatus
-from relay.store import BillingError, BillingStore
-from relay.stripe_store import StripeBillingStore
+from billing_support.domain import InvoiceStatus, SubscriptionStatus
+from billing_support.store import BillingError, BillingStore
+from billing_support.stripe_store import StripeBillingStore
 
 NOW_TS = 1738368000  # 2025-02-01T00:00:00Z
 

@@ -16,15 +16,15 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from relay.agent import Agent, TicketResolution
-from relay.brain import MockBrain
-from relay.domain import Channel, Ticket
-from relay.eval.golden import NOW, build_world
+from billing_support.agent import Agent, TicketResolution
+from billing_support.brain import MockBrain
+from billing_support.domain import Channel, Ticket
+from billing_support.eval.golden import NOW, build_world
 
 _LANDING_HTML = """\
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Relay — local support workflow</title>
+<title>Billing Support Assistant — local support workflow</title>
 <style>
   body{margin:0;background:#0f1419;color:#e6edf3;
        font:16px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -37,7 +37,7 @@ _LANDING_HTML = """\
   a{color:#2f81f7;text-decoration:none}a:hover{text-decoration:underline}
   .good{color:#2ea043;font-weight:600}
 </style></head><body><div class="wrap">
-  <h1>Relay</h1>
+  <h1>Billing Support Assistant</h1>
   <p class="sub">A local sample-data harness for gated support decisions.
   The model <em>proposes</em>; record checks and a bounded request grammar decide
   whether a sample refund or cancellation is allowed. The fixed offline evaluation
@@ -50,7 +50,7 @@ _LANDING_HTML = """\
     <a href="/docs">/docs</a> and run <code>POST /tickets</code> in the browser.
   </div>
   <div class="card">
-    <strong>Or curl it.</strong> With <code>relay serve</code> on its default local port,
+    <strong>Or curl it.</strong> With <code>billing-support serve</code> on its default local port,
     a supported refund resolves; a request naming
     another customer's invoice requires review:
 <pre># resolves (Ada's own recent invoice, within policy):
@@ -63,8 +63,8 @@ curl -s http://127.0.0.1:8000/tickets -H 'content-type: application/json' \\
     Demo customers: <code>cus_ada</code> <code>cus_bob</code> <code>cus_carol</code>
     <code>cus_dave</code> <code>cus_erin</code>.
   </div>
-  <p class="sub">Eval scoreboard: <a href="https://duckky153.github.io/relay/">duckky153.github.io/relay</a>
-  · Source: <a href="https://github.com/Duckky153/relay">github.com/Duckky153/relay</a>
+  <p class="sub">Eval scoreboard: <a href="https://duckky153.github.io/billing-support-assistant/">duckky153.github.io/billing-support-assistant</a>
+  · Source: <a href="https://github.com/Duckky153/billing-support-assistant">github.com/Duckky153/billing-support-assistant</a>
   · Health: <a href="/healthz">/healthz</a></p>
 </div></body></html>"""
 
@@ -78,7 +78,7 @@ class TicketRequest(BaseModel):
 
 def create_app(agent: Agent | None = None) -> FastAPI:
     app = FastAPI(
-        title="Relay",
+        title="Billing Support Assistant",
         version="0.1.0",
         description="Local sample-data support workflow; no caller authentication or live billing.",
     )
@@ -92,7 +92,7 @@ def create_app(agent: Agent | None = None) -> FastAPI:
 
     @app.get("/healthz")
     def healthz() -> dict[str, str]:
-        return {"status": "ok", "service": "relay"}
+        return {"status": "ok", "service": "billing-support"}
 
     @app.post("/tickets")
     def handle_ticket(req: TicketRequest) -> TicketResolution:

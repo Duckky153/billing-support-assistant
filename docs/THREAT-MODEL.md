@@ -1,6 +1,6 @@
 # Threat model
 
-Relay is a local sample-data harness, not an authenticated production service.
+Billing Support Assistant is a local sample-data harness, not an authenticated production service.
 
 | Failure mode | Current control | Limit |
 | --- | --- | --- |

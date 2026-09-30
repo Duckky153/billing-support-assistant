@@ -12,8 +12,8 @@ import re
 from dataclasses import dataclass
 from decimal import Decimal
 
-from relay.actions import CancelAction, RefundAction
-from relay.domain import Invoice, InvoiceStatus, Subscription
+from billing_support.actions import CancelAction, RefundAction
+from billing_support.domain import Invoice, InvoiceStatus, Subscription
 
 
 def normalize(body: str) -> str:

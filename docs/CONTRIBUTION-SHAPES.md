@@ -1,16 +1,16 @@
 # Contribution shapes
 
-Relay is a local support-agent demo with bounded execution controls. These are
+Billing Support Assistant is a local support-agent demo with bounded execution controls. These are
 historical extension ideas, not evidence of integration, feature parity, or a
 current vendor architecture. Vendor descriptions below were not re-verified in
-the September 8 workflow audit. See SAFETY.md for Relay's actual current limits.
+the September 8 workflow audit. See SAFETY.md for Billing Support Assistant's actual current limits.
 
 ## Decagon
 Conversational agents that resolve end-to-end, with **human approval on risky
 actions** and strict guardrails on refunds + identity. They run a two-phase eval:
 offline LLM-as-judge over `{query, context, response}` triplets, then online A/B
 with a traffic ramp.
-- **Maps to:** Relay's policy gate (human approval = escalation on risky actions),
+- **Maps to:** Billing Support Assistant's policy gate (human approval = escalation on risky actions),
   the grounding gate (identity/ownership), and the eval harness.
 - **Extend:** add an LLM-judge scorer alongside the deterministic one; wire the
   golden suite into a triplet format; add an online-ramp config.

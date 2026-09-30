@@ -19,9 +19,9 @@ jobs:
       - name: Install
         run: pip install -e ".[dev,service,llm]"
       - name: Format check
-        run: ruff format --check relay tests scripts
+        run: ruff format --check billing_support tests scripts
       - name: Lint
-        run: ruff check relay tests scripts
+        run: ruff check billing_support tests scripts
       - name: Type check (strict)
         run: mypy
       - name: Test
@@ -39,8 +39,8 @@ jobs:
       - run: pip install -e ".[dev]"
       - name: Regenerate eval snapshot + schema
         run: |
-          relay eval --out results/demo
-          relay schema --out schema/run-report-v1.json
+          billing-support eval --out results/demo
+          billing-support schema --out schema/run-report-v1.json
       - name: Committed snapshot must match a fresh run
         run: git diff --exit-code -- results/demo schema/run-report-v1.json
       - name: Validate snapshot against schema
@@ -62,7 +62,7 @@ jobs:
       - run: pip install -e ".[dev]"
       - name: Rebuild dashboard data from the snapshot
         run: |
-          relay eval --out results/demo
+          billing-support eval --out results/demo
           python scripts/build_dashboard_data.py
       - name: Dashboard data must be in sync
         run: git diff --exit-code -- dashboard/report-data.js

@@ -11,8 +11,7 @@ from __future__ import annotations
 import datetime as dt
 
 import pytest
-from pydantic import ValidationError
-from relay.domain import (
+from billing_support.domain import (
     Channel,
     Customer,
     Invoice,
@@ -22,6 +21,7 @@ from relay.domain import (
     Ticket,
     dollars,
 )
+from pydantic import ValidationError
 
 UTC = dt.UTC
 

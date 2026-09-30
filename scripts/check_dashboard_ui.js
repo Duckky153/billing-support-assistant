@@ -18,8 +18,8 @@ const nodes = new Map([...html.matchAll(/id="([^"]+)"/g)].map(m => ["#" + m[1], 
 const presets = [...html.matchAll(/data-preset="([^"]+)"/g)].map(m => element({preset: m[1]}));
 const document = { querySelector: selector => nodes.get(selector),
   querySelectorAll: selector => selector === ".preset" ? presets : [] };
-const context = {document, window: {RelayDemo: require("../dashboard/relay-demo.js"),
-  RELAY_REPORT: {metrics: {total: 64, escalated: 55, unsafe: 0}}}};
+const context = {document, window: {BillingSupportDemo: require("../dashboard/billing-support-demo.js"),
+  BILLING_SUPPORT_REPORT: {metrics: {total: 64, escalated: 55, unsafe: 0}}}};
 vm.runInNewContext([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1], context);
 const get = id => { assert(nodes.has("#" + id), "missing " + id); return nodes.get("#" + id); };
 presets.find(p => p.dataset.preset === "question").fire("click");

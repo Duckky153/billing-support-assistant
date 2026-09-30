@@ -1,4 +1,4 @@
-"""The `relay` command-line interface.
+"""The `billing-support` command-line interface.
 
 Offline subcommands (`eval`, `run`, `verify-chain`, `schema`) use the
 deterministic MockBrain and need no API key. `serve` starts the HTTP service and
@@ -12,13 +12,13 @@ import json
 import sys
 from pathlib import Path
 
-from relay.agent import Agent
-from relay.audit import AuditLog, verify_chain
-from relay.brain import Brain, ClaudeBrain, MockBrain
-from relay.domain import Channel, Ticket
-from relay.eval.golden import NOW, build_world, load_golden
-from relay.eval.harness import run_suite
-from relay.eval.report import EvalReport
+from billing_support.agent import Agent
+from billing_support.audit import AuditLog, verify_chain
+from billing_support.brain import Brain, ClaudeBrain, MockBrain
+from billing_support.domain import Channel, Ticket
+from billing_support.eval.golden import NOW, build_world, load_golden
+from billing_support.eval.harness import run_suite
+from billing_support.eval.report import EvalReport
 
 
 def _brain(name: str) -> Brain:
@@ -86,17 +86,20 @@ def _cmd_serve(args: argparse.Namespace) -> int:
         import uvicorn
     except ImportError:
         print(
-            "serve needs the 'service' extra: pip install 'relay-agent[service]'", file=sys.stderr
+            "serve needs the 'service' extra: pip install 'billing-support-assistant[service]'",
+            file=sys.stderr,
         )
         return 1
-    from relay.service import create_app
+    from billing_support.service import create_app
 
     uvicorn.run(create_app(), host=args.host, port=args.port)
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="relay", description="Safe autonomous customer-support agent.")
+    p = argparse.ArgumentParser(
+        prog="billing_support", description="Safe autonomous customer-support agent."
+    )
     sub = p.add_subparsers(dest="command", required=True)
 
     ev = sub.add_parser("eval", help="run the golden suite and write a report")

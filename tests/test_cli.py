@@ -1,11 +1,11 @@
-"""The `relay` CLI. Offline subcommands run on the MockBrain — no API key."""
+"""The `billing-support` CLI. Offline subcommands run on the MockBrain — no API key."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from relay.cli import main
+from billing_support.cli import main
 
 
 def test_eval_writes_a_valid_report_and_audit(tmp_path: Path) -> None:

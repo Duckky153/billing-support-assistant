@@ -14,15 +14,15 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from relay.agent import Outcome
-from relay.domain import (
+from billing_support.agent import Outcome
+from billing_support.domain import (
     Customer,
     Invoice,
     InvoiceStatus,
     Subscription,
     SubscriptionStatus,
 )
-from relay.store import InMemoryBillingStore
+from billing_support.store import InMemoryBillingStore
 
 UTC = dt.UTC
 NOW = dt.datetime(2025, 2, 1, tzinfo=UTC)

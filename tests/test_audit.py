@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from relay.audit import GENESIS_HASH, AuditLog, redact, verify_chain
+from billing_support.audit import GENESIS_HASH, AuditLog, redact, verify_chain
 
 
 def test_concurrent_append_is_atomic(monkeypatch) -> None:
@@ -10,7 +10,7 @@ def test_concurrent_append_is_atomic(monkeypatch) -> None:
     from contextlib import suppress
     from threading import Event
 
-    import relay.audit as audit_module
+    import billing_support.audit as audit_module
 
     entered, release, second_started = Event(), Event(), Event()
     original = audit_module._hash_payload

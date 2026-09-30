@@ -12,10 +12,10 @@ import argparse
 import json
 from pathlib import Path
 
-from relay.agent import Agent, Outcome
-from relay.brain import MockBrain
-from relay.domain import Channel, Ticket
-from relay.eval.golden import NOW, build_world
+from billing_support.agent import Agent, Outcome
+from billing_support.brain import MockBrain
+from billing_support.domain import Channel, Ticket
+from billing_support.eval.golden import NOW, build_world
 
 
 def main() -> int:

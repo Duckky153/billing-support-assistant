@@ -16,14 +16,14 @@ import datetime as dt
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-from relay.domain import (
+from billing_support.domain import (
     Customer,
     Invoice,
     InvoiceStatus,
     Subscription,
     SubscriptionStatus,
 )
-from relay.store import BillingError, InMemoryBillingStore
+from billing_support.store import BillingError, InMemoryBillingStore
 
 UTC = dt.UTC
 

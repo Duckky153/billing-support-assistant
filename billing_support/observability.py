@@ -1,6 +1,6 @@
-"""OpenTelemetry tracing for Relay.
+"""OpenTelemetry tracing for Billing Support Assistant.
 
-Relay instruments every ticket with OpenTelemetry spans (intake → propose →
+Billing Support Assistant instruments every ticket with OpenTelemetry spans (intake → propose →
 ground → gate → execute). That is the integration seam with an eval/observability
 backend: point an OTLP exporter at Phoenix, Braintrust, Arize, LangSmith, etc.
 and the same spans light up there with no code change.
@@ -34,7 +34,7 @@ def configure() -> None:
 
 def get_tracer() -> trace.Tracer:
     configure()
-    return trace.get_tracer("relay")
+    return trace.get_tracer("billing-support")
 
 
 def current_trace_id() -> str | None:

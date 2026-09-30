@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import datetime as dt
 
-from relay.agent import Agent, Outcome
-from relay.audit import verify_chain
-from relay.brain import MockBrain
-from relay.domain import (
+from billing_support.agent import Agent, Outcome
+from billing_support.audit import verify_chain
+from billing_support.brain import MockBrain
+from billing_support.domain import (
     Channel,
     Customer,
     Invoice,
@@ -16,8 +16,8 @@ from relay.domain import (
     SubscriptionStatus,
     Ticket,
 )
-from relay.policy import PolicyConfig
-from relay.store import BillingError, InMemoryBillingStore
+from billing_support.policy import PolicyConfig
+from billing_support.store import BillingError, InMemoryBillingStore
 
 UTC = dt.UTC
 NOW = dt.datetime(2025, 1, 31, tzinfo=UTC)

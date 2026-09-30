@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from billing_support.service import create_app
 from fastapi.testclient import TestClient
-from relay.service import create_app
 
 
 def test_healthz() -> None:
@@ -19,7 +19,7 @@ def test_root_landing_page_is_helpful_html() -> None:
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
     body = r.text
-    assert "Relay" in body
+    assert "Billing Support Assistant" in body
     assert "/docs" in body  # links to the point-and-click Swagger demo
     assert "/tickets" in body
     assert "local sample-data harness" in body

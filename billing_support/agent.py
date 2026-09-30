@@ -17,21 +17,21 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-from relay.actions import (
+from billing_support.actions import (
     AnswerAction,
     CancelAction,
     EscalateAction,
     ProposedAction,
     RefundAction,
 )
-from relay.audit import AuditLog, redact
-from relay.brain import Brain, default_escalation_proposal
-from relay.domain import SubscriptionStatus, Ticket
-from relay.grounding import GroundingContext, GroundingResult, check_grounding
-from relay.observability import current_trace_id, get_tracer
-from relay.policy import GateDecision, PolicyConfig, PolicyContext, Verdict, decide
-from relay.proposal import AgentProposal, Intent
-from relay.store import BillingError, BillingStore
+from billing_support.audit import AuditLog, redact
+from billing_support.brain import Brain, default_escalation_proposal
+from billing_support.domain import SubscriptionStatus, Ticket
+from billing_support.grounding import GroundingContext, GroundingResult, check_grounding
+from billing_support.observability import current_trace_id, get_tracer
+from billing_support.policy import GateDecision, PolicyConfig, PolicyContext, Verdict, decide
+from billing_support.proposal import AgentProposal, Intent
+from billing_support.store import BillingError, BillingStore
 
 _ESCALATION_REPLY = (
     "Thanks for reaching out — I'm connecting you with a teammate who can help with this."
@@ -138,7 +138,7 @@ class Agent:
 
     def _handle_once(self, ticket: Ticket) -> TicketResolution:
         tracer = get_tracer()
-        with tracer.start_as_current_span("relay.handle_ticket") as span:
+        with tracer.start_as_current_span("billing_support.handle_ticket") as span:
             span.set_attribute("ticket.id", ticket.id)
             span.set_attribute("customer.id", ticket.customer_id)
             trace_id = current_trace_id()
@@ -151,7 +151,7 @@ class Agent:
             subs = self.store.get_subscriptions(ticket.customer_id)
             invoices = self.store.get_invoices(ticket.customer_id)
 
-            with tracer.start_as_current_span("relay.brain.propose"):
+            with tracer.start_as_current_span("billing_support.brain.propose"):
                 # Failure is escalation: a brain that raises (a buggy custom
                 # brain, an unhandled SDK error) must not crash the pipeline or
                 # — worse — bypass it. Any exception degrades to a safe,
@@ -169,13 +169,13 @@ class Agent:
             span.set_attribute("intent", proposal.intent)
             span.set_attribute("action", proposal.action.type)
 
-            with tracer.start_as_current_span("relay.grounding"):
+            with tracer.start_as_current_span("billing_support.grounding"):
                 gctx = GroundingContext(
                     ticket_customer_id=ticket.customer_id, invoices=invoices, subscriptions=subs
                 )
                 gres = check_grounding(proposal.action, proposal.grounding, gctx)
 
-            with tracer.start_as_current_span("relay.policy"):
+            with tracer.start_as_current_span("billing_support.policy"):
                 pctx = PolicyContext(
                     ticket=ticket,
                     customer=customer,
@@ -216,7 +216,7 @@ class Agent:
                 ticket, proposal, gres, gate, gate.code, gate.reason, now, trace_id
             )
 
-        with get_tracer().start_as_current_span("relay.execute"):
+        with get_tracer().start_as_current_span("billing_support.execute"):
             try:
                 executed, receipt = self._execute(ticket, action)
             except BillingError as exc:
@@ -269,7 +269,7 @@ class Agent:
     @staticmethod
     def _operation_key(ticket: Ticket, operation: str) -> str:
         scope = json.dumps([ticket.customer_id, ticket.id], separators=(",", ":"))
-        return f"relay:{hashlib.sha256(scope.encode()).hexdigest()}:{operation}"
+        return f"billing-support:{hashlib.sha256(scope.encode()).hexdigest()}:{operation}"
 
     # --- terminal builders --------------------------------------------------
     def _finish_resolved(

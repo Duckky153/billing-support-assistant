@@ -1,9 +1,9 @@
-// Browser implementation of Relay's local decision path:
+// Browser implementation of Billing Support Assistant's local decision path:
 // the deterministic MockBrain + the grounding gate + the deny-by-default policy
-// gate, over the same fixed evaluation world (relay/eval/golden.py::build_world).
+// gate, over the same fixed evaluation world (billing_support/eval/golden.py::build_world).
 //
 // The browser path mirrors the Python logic so a ticket produces the same outcome
-// and gate code as `relay run`. scripts/check_js_parity.py checks that parity. It
+// and gate code as `billing-support run`. scripts/check_js_parity.py checks that parity. It
 // uses the bounded local MockBrain without requiring an API key. It previews
 // decisions only; it does not mutate records or deliver replies/case files.
 //
@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  // --- policy config (relay/policy.py::PolicyConfig defaults) ---------------
+  // --- policy config (billing_support/policy.py::PolicyConfig defaults) ---------------
   var CONFIG = {
     max_refund_cents: 5000,
     refund_window_days: 30,
@@ -23,7 +23,7 @@
     sensitive_topics_escalate: true,
   };
 
-  // --- the evaluation world (relay/eval/golden.py::build_world) -------------
+  // --- the evaluation world (billing_support/eval/golden.py::build_world) -------------
   // age_days = (now - created_at).days, precomputed since the clock is fixed.
   var CUSTOMERS = {
     cus_ada: { id: "cus_ada", name: "Ada" },
@@ -47,7 +47,7 @@
     { id: "in_dave1", customer_id: "cus_dave", amount_cents: 50000, status: "paid", age_days: 1, refunded_cents: 0 },
   ];
 
-  // --- brain keyword tables (relay/brain.py) --------------------------------
+  // --- brain keyword tables (billing_support/brain.py) --------------------------------
   var SENSITIVE_KEYWORDS = [
     "chargeback", "dispute", "sue", "lawsuit", "lawyer", "attorney", "fraud",
     "financial advice", "invest", "suicide", "self-harm", "medical advice",
@@ -69,7 +69,7 @@
   function invoicesFor(cid) { return INVOICES.filter(function (i) { return i.customer_id === cid; }); }
   function subsFor(cid) { return SUBSCRIPTIONS.filter(function (s) { return s.customer_id === cid; }); }
 
-  // Whole-request grammar mirrored from relay/authorization.py. Unknown text
+  // Whole-request grammar mirrored from billing_support/authorization.py. Unknown text
   // requires review; this is not a general natural-language consent classifier.
   function normalize(body) { return body.toLowerCase().replaceAll("’", "'").replace(/\s+/g, " ").trim(); }
   function mutationRequest(body) {
@@ -220,7 +220,7 @@
     return c.reduce(function (a, b) { return b.age_days < a.age_days ? b : a; }); // smallest age = most recent
   }
 
-  // --- grounding gate (relay/grounding.py::check_grounding) -----------------
+  // --- grounding gate (billing_support/grounding.py::check_grounding) -----------------
   function checkGrounding(action, grounding, ticketCustomerId, invoices, subs) {
     if (action.type === "escalate") return { grounded: true, code: "ok", reason: "" };
     if (grounding.customer_id !== ticketCustomerId) {
@@ -250,7 +250,7 @@
     return { grounded: true, code: "ok", reason: "proposal is grounded in retrieved records" };
   }
 
-  // --- policy gate (relay/policy.py::decide) --------------------------------
+  // --- policy gate (billing_support/policy.py::decide) --------------------------------
   function decide(action, customer, subs, invoices, confidence, sensitive, body) {
     if (action.type === "escalate") return { verdict: "allow", code: "escalate_requested", reason: "agent requested human handoff" };
     if (CONFIG.sensitive_topics_escalate && sensitive) {
@@ -290,10 +290,10 @@
   }
   function esc(code, reason) { return { verdict: "escalate", code: code, reason: reason }; }
 
-  // --- orchestrator (relay/agent.py::Agent.handle) --------------------------
+  // --- orchestrator (billing_support/agent.py::Agent.handle) --------------------------
   // Returns { outcome, executed, gate_code, grounding_code, policy_code, intent,
   //   action_type, customer_reply, proposed, reason }.
-  function relayDecide(customerId, body) {
+  function billingSupportDecide(customerId, body) {
     var customer = CUSTOMERS[customerId];
     if (!customer) {
       return {
@@ -345,7 +345,7 @@
     return "escalate to a human";
   }
 
-  var API = { relayDecide: relayDecide, CUSTOMERS: CUSTOMERS };
-  if (typeof window !== "undefined") window.RelayDemo = API;
+  var API = { billingSupportDecide: billingSupportDecide, CUSTOMERS: CUSTOMERS };
+  if (typeof window !== "undefined") window.BillingSupportDemo = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })();

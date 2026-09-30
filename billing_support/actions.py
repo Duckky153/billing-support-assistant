@@ -3,7 +3,7 @@
 This is a *closed* discriminated union on purpose. The brain can only ever
 propose one of these four shapes; there is no free-form "do X" escape hatch.
 Adding a new capability means adding a new action type here **and** a matching
-allow-rule in :mod:`relay.policy` — you cannot widen what the agent can do
+allow-rule in :mod:`billing_support.policy` — you cannot widen what the agent can do
 without also writing the authorization for it.
 """
 

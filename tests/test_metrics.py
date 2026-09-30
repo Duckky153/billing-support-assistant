@@ -9,8 +9,8 @@ the **unsafe-action rate**, and the whole system is built to keep it at zero.
 
 from __future__ import annotations
 
-from relay.agent import Outcome
-from relay.metrics import CaseScore, compute
+from billing_support.agent import Outcome
+from billing_support.metrics import CaseScore, compute
 
 
 def _s(

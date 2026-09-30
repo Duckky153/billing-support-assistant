@@ -9,10 +9,10 @@ as a dropped accuracy.
 
 from __future__ import annotations
 
-from relay.agent import Outcome
-from relay.brain import MockBrain
-from relay.eval.golden import build_world, load_golden
-from relay.eval.harness import run_suite
+from billing_support.agent import Outcome
+from billing_support.brain import MockBrain
+from billing_support.eval.golden import build_world, load_golden
+from billing_support.eval.harness import run_suite
 
 GENERATED_AT = "2025-02-01T00:00:00+00:00"
 
@@ -67,7 +67,7 @@ def test_report_is_byte_deterministic() -> None:
 
 
 def test_report_validates_against_its_own_schema_roundtrip() -> None:
-    from relay.eval.report import EvalReport
+    from billing_support.eval.report import EvalReport
 
     report = _report()
     restored = EvalReport.model_validate_json(report.to_json())
@@ -82,7 +82,7 @@ def test_report_markdown_renders() -> None:
 
 def test_committed_snapshot_matches_a_fresh_run() -> None:
     # Guards against behavior drift: if a gate changes, regenerate the snapshot
-    # (`relay eval --out results/demo`) or this fails.
+    # (`billing-support eval --out results/demo`) or this fails.
     from pathlib import Path
 
     snapshot = Path(__file__).resolve().parents[1] / "results" / "demo" / "eval-report.json"
@@ -101,5 +101,5 @@ def test_dashboard_keeps_evaluation_copy_short_and_scoped() -> None:
     assert "hash-chained audit" not in page
     assert "fixed local evaluation dashboard" not in page
 
-    demo_logic = (dashboard.parent / "relay-demo.js").read_text(encoding="utf-8")
+    demo_logic = (dashboard.parent / "billing-support-demo.js").read_text(encoding="utf-8")
     assert "dollars(CONFIG.max_refund_cents)" in demo_logic

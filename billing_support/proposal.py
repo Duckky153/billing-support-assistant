@@ -15,7 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from relay.actions import ProposedAction
+from billing_support.actions import ProposedAction
 
 
 class Intent(StrEnum):

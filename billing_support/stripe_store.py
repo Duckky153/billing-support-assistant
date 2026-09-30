@@ -1,8 +1,8 @@
 """A Stripe-backed billing store.
 
-`StripeBillingStore` implements the same :class:`~relay.store.BillingStore`
+`StripeBillingStore` implements the same :class:`~billing_support.store.BillingStore`
 protocol as the in-memory store, so the orchestrator and both gates are
-unchanged when Relay is pointed at a real Stripe account. The mapping functions
+unchanged when Billing Support Assistant is pointed at a real Stripe account. The mapping functions
 (`to_customer` / `to_invoice` / `to_subscription`) are pure and unit-tested; the
 store methods call an injected Stripe-like client (the real ``stripe`` module, or
 a fake in tests).
@@ -19,8 +19,14 @@ import datetime as dt
 import threading
 from typing import Any
 
-from relay.domain import Customer, Invoice, InvoiceStatus, Subscription, SubscriptionStatus
-from relay.store import BillingError, CancelReceipt, RefundReceipt
+from billing_support.domain import (
+    Customer,
+    Invoice,
+    InvoiceStatus,
+    Subscription,
+    SubscriptionStatus,
+)
+from billing_support.store import BillingError, CancelReceipt, RefundReceipt
 
 _INVOICE_STATUS = {
     "paid": InvoiceStatus.PAID,

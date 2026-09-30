@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import datetime as dt
 
-from relay.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
-from relay.domain import (
+from billing_support.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
+from billing_support.domain import (
     Channel,
     Customer,
     Invoice,
@@ -14,7 +14,7 @@ from relay.domain import (
     SubscriptionStatus,
     Ticket,
 )
-from relay.policy import PolicyConfig, PolicyContext, Verdict, decide
+from billing_support.policy import PolicyConfig, PolicyContext, Verdict, decide
 
 UTC = dt.UTC
 NOW = dt.datetime(2025, 1, 31, tzinfo=UTC)

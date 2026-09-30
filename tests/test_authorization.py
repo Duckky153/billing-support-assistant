@@ -3,12 +3,12 @@
 from types import SimpleNamespace
 
 import pytest
-from relay.actions import AnswerAction, CancelAction, RefundAction
-from relay.agent import Agent, Outcome
-from relay.brain import ClaudeBrain, MockBrain
-from relay.domain import Channel, SubscriptionStatus, Ticket
-from relay.eval.golden import NOW, build_world
-from relay.proposal import AgentProposal, Grounding, Intent
+from billing_support.actions import AnswerAction, CancelAction, RefundAction
+from billing_support.agent import Agent, Outcome
+from billing_support.brain import ClaudeBrain, MockBrain
+from billing_support.domain import Channel, SubscriptionStatus, Ticket
+from billing_support.eval.golden import NOW, build_world
+from billing_support.proposal import AgentProposal, Grounding, Intent
 
 
 def ticket(body: str) -> Ticket:

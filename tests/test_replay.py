@@ -3,14 +3,14 @@
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
+from billing_support.agent import Agent, Outcome
+from billing_support.audit import verify_chain
+from billing_support.brain import MockBrain
+from billing_support.domain import Channel, SubscriptionStatus, Ticket
+from billing_support.eval.golden import NOW, build_world
+from billing_support.service import create_app
+from billing_support.store import BillingError, CancelReceipt, InMemoryBillingStore, RefundReceipt
 from fastapi.testclient import TestClient
-from relay.agent import Agent, Outcome
-from relay.audit import verify_chain
-from relay.brain import MockBrain
-from relay.domain import Channel, SubscriptionStatus, Ticket
-from relay.eval.golden import NOW, build_world
-from relay.service import create_app
-from relay.store import BillingError, CancelReceipt, InMemoryBillingStore, RefundReceipt
 
 
 def make_ticket(body: str, customer: str = "cus_ada") -> Ticket:

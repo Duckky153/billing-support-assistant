@@ -1,7 +1,7 @@
 """Immutable domain value objects for billing and support tickets.
 
 These are pure data. No eligibility rules, caps, or authorization logic live
-here — that is the policy gate's job (see :mod:`relay.policy`). Keeping the
+here — that is the policy gate's job (see :mod:`billing_support.policy`). Keeping the
 domain dumb is deliberate: a record can't grant permission, so there is no path
 by which "the data said it was fine" becomes an authorization.
 

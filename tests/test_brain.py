@@ -9,9 +9,9 @@ import datetime as dt
 from types import SimpleNamespace
 from typing import Any
 
-from relay.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
-from relay.brain import ClaudeBrain, MockBrain
-from relay.domain import (
+from billing_support.actions import AnswerAction, CancelAction, EscalateAction, RefundAction
+from billing_support.brain import ClaudeBrain, MockBrain
+from billing_support.domain import (
     Channel,
     Customer,
     Invoice,
@@ -20,7 +20,7 @@ from relay.domain import (
     SubscriptionStatus,
     Ticket,
 )
-from relay.proposal import AgentProposal, Grounding, Intent
+from billing_support.proposal import AgentProposal, Grounding, Intent
 
 UTC = dt.UTC
 NOW = dt.datetime(2025, 1, 31, tzinfo=UTC)

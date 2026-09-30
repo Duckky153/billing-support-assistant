@@ -12,15 +12,15 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from relay.actions import (
+from billing_support.actions import (
     AnswerAction,
     CancelAction,
     EscalateAction,
     ProposedAction,
     RefundAction,
 )
-from relay.authorization import authorizes
-from relay.domain import Customer, Invoice, InvoiceStatus, Subscription, Ticket
+from billing_support.authorization import authorizes
+from billing_support.domain import Customer, Invoice, InvoiceStatus, Subscription, Ticket
 
 
 class Verdict(StrEnum):

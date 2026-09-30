@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove the in-browser demo (dashboard/relay-demo.js) matches the real Python.
+"""Prove the in-browser demo (dashboard/billing-support-demo.js) matches the real Python.
 
 Runs every golden case through BOTH the real Python agent and the JavaScript
 port (via node), and asserts the outcome + controlling gate code are identical.
@@ -13,19 +13,19 @@ import subprocess
 import sys
 from pathlib import Path
 
-from relay.agent import Agent
-from relay.brain import MockBrain
-from relay.domain import Channel, Ticket
-from relay.eval.golden import NOW, build_world, load_golden
+from billing_support.agent import Agent
+from billing_support.brain import MockBrain
+from billing_support.domain import Channel, Ticket
+from billing_support.eval.golden import NOW, build_world, load_golden
 
 ROOT = Path(__file__).resolve().parent.parent
-JS = ROOT / "dashboard" / "relay-demo.js"
+JS = ROOT / "dashboard" / "billing-support-demo.js"
 
 NODE_RUNNER = f"""
-const {{ relayDecide }} = require({json.dumps(str(JS))});
+const {{ billingSupportDecide }} = require({json.dumps(str(JS))});
 const inputs = JSON.parse(require('fs').readFileSync(0, 'utf8'));
 const out = inputs.map(function (x) {{
-  const r = relayDecide(x[0], x[1]);
+  const r = billingSupportDecide(x[0], x[1]);
   return {{ outcome: r.outcome, gate_code: r.gate_code, executed: r.executed,
     customer_reply: r.customer_reply, handoff: !!r.case_file }};
 }});

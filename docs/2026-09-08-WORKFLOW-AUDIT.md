@@ -1,4 +1,4 @@
-# Relay workflow audit and repair
+# Billing Support Assistant workflow audit and repair
 
 ## Scope
 
@@ -35,11 +35,11 @@ external messages or billing transactions were sent. Base commit: `ee633ba`.
 
 | Area | Required behavior | Files |
 | --- | --- | --- |
-| Request authorization | Negated, informational, ambiguous, unsupported, or conflicting mutation requests cannot change state, even with a malicious structured proposal. Explicit supported requests remain usable. No claim of complete natural-language understanding. | `relay/authorization.py`, `relay/policy.py`, `relay/brain.py`, `tests/test_authorization.py`, `tests/test_policy.py`, `tests/test_brain.py`, `tests/test_agent.py` |
-| Request replay and receipts | Same customer/ID/payload repeats the original result with one effect. Different customers stay isolated. Changed payload conflicts. Receipts must match the authorized operation. Concurrent requests are safe. | `relay/agent.py`, `relay/store.py`, `relay/stripe_store.py`, `tests/test_agent.py`, `tests/test_store.py`, `tests/test_stripe_store.py`, `tests/test_service.py` |
-| Audit and tracing | Concurrent decisions retain a valid sequential chain; provider setup is race-safe. | `relay/audit.py`, `relay/observability.py`, `tests/test_audit.py`, `tests/test_agent.py` |
-| Browser workflow | Mirror the repaired authorization and reply behavior; invalidate stale results; show the reply and review packet. Keep static/no-billing boundary visible. | `dashboard/relay-demo.js`, `dashboard/index.html`, `scripts/check_js_parity.py`, narrow dashboard regression tests |
-| Evaluation and claims | Independently correct false-resolution expectations. Preserve case count only if still accurate, regenerate derived artifacts, report every changed expectation and count. Remove unbounded safety guarantees. | `relay/data/golden_tickets.json`, `results/demo/*`, `dashboard/report-data.js`, `.github/workflows/ci.yml`, `README.md`, `docs/SAFETY.md`, `docs/HONESTY.md`, `docs/DEMO.md`, `docs/ARCHITECTURE.md` |
+| Request authorization | Negated, informational, ambiguous, unsupported, or conflicting mutation requests cannot change state, even with a malicious structured proposal. Explicit supported requests remain usable. No claim of complete natural-language understanding. | `billing_support/authorization.py`, `billing_support/policy.py`, `billing_support/brain.py`, `tests/test_authorization.py`, `tests/test_policy.py`, `tests/test_brain.py`, `tests/test_agent.py` |
+| Request replay and receipts | Same customer/ID/payload repeats the original result with one effect. Different customers stay isolated. Changed payload conflicts. Receipts must match the authorized operation. Concurrent requests are safe. | `billing_support/agent.py`, `billing_support/store.py`, `billing_support/stripe_store.py`, `tests/test_agent.py`, `tests/test_store.py`, `tests/test_stripe_store.py`, `tests/test_service.py` |
+| Audit and tracing | Concurrent decisions retain a valid sequential chain; provider setup is race-safe. | `billing_support/audit.py`, `billing_support/observability.py`, `tests/test_audit.py`, `tests/test_agent.py` |
+| Browser workflow | Mirror the repaired authorization and reply behavior; invalidate stale results; show the reply and review packet. Keep static/no-billing boundary visible. | `dashboard/billing-support-demo.js`, `dashboard/index.html`, `scripts/check_js_parity.py`, narrow dashboard regression tests |
+| Evaluation and claims | Independently correct false-resolution expectations. Preserve case count only if still accurate, regenerate derived artifacts, report every changed expectation and count. Remove unbounded safety guarantees. | `billing_support/data/golden_tickets.json`, `results/demo/*`, `dashboard/report-data.js`, `.github/workflows/ci.yml`, `README.md`, `docs/SAFETY.md`, `docs/HONESTY.md`, `docs/DEMO.md`, `docs/ARCHITECTURE.md` |
 
 ## Execution record
 
@@ -59,7 +59,7 @@ was separately observed failing, then fixed in Python and browser logic.
 Additional acceptance files discovered during the audit: `tests/test_replay.py`,
 `tests/test_candidate_review.py`, `tests/test_dashboard.py`,
 `scripts/check_dashboard_ui.js`, `scripts/verify_candidate_cases.py`,
-`relay/service.py`, `relay/metrics.py`, `pyproject.toml`, and related truth docs.
+`billing_support/service.py`, `billing_support/metrics.py`, `pyproject.toml`, and related truth docs.
 
 ## Corrected corpus and independent expectations
 

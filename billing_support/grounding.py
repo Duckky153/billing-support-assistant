@@ -18,9 +18,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from relay.actions import CancelAction, EscalateAction, ProposedAction, RefundAction
-from relay.domain import Invoice, Subscription
-from relay.proposal import Grounding
+from billing_support.actions import CancelAction, EscalateAction, ProposedAction, RefundAction
+from billing_support.domain import Invoice, Subscription
+from billing_support.proposal import Grounding
 
 
 class GroundingContext(BaseModel):

@@ -11,8 +11,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from relay.agent import Outcome
-from relay.metrics import Metrics
+from billing_support.agent import Outcome
+from billing_support.metrics import Metrics
 
 SCHEMA_VERSION = "run-report-v1"
 
@@ -60,7 +60,7 @@ class EvalReport(BaseModel):
     def to_markdown(self) -> str:
         m = self.metrics
         lines = [
-            f"# Relay eval report ({self.brain})",
+            f"# Billing Support Assistant eval report ({self.brain})",
             "",
             f"- generated: `{self.generated_at}`",
             f"- cases: **{m.total}**",

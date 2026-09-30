@@ -5,7 +5,7 @@ Two implementations share one :class:`BillingStore` protocol:
 * :class:`InMemoryBillingStore` — deterministic, dependency-free. The default for
   the offline demo and for CI. No network, no API key.
 * :class:`StripeBillingStore` — a thin adapter over a Stripe client (see
-  ``relay.stripe_store``), injected so the read-mapping and refund call can be
+  ``billing_support.stripe_store``), injected so the read-mapping and refund call can be
   unit-tested with a fake.
 
 Mutations (``issue_refund``, ``cancel_subscription``) are the store's
@@ -21,7 +21,13 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict
 
-from relay.domain import Customer, Invoice, InvoiceStatus, Subscription, SubscriptionStatus
+from billing_support.domain import (
+    Customer,
+    Invoice,
+    InvoiceStatus,
+    Subscription,
+    SubscriptionStatus,
+)
 
 
 class BillingError(Exception):
