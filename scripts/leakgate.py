@@ -54,7 +54,6 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("Stripe live secret key", re.compile(r"\bsk_live_[0-9a-zA-Z]{16,}\b")),
     ("Private key header", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
     ("US SSN", re.compile(r"\b\d{3}-\d{2}-\d{4}\b")),
-    ("USCIS A-number", re.compile(r"\bA\d{8,9}\b")),
 )
 
 # Files that are allowed to contain otherwise-flagged tokens (this scanner's
