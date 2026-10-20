@@ -7,9 +7,7 @@ records and the billing rules; anything unclear goes to a person with a short
 review packet.
 
 **Live demo: [duckky153.github.io/billing-support-assistant](https://duckky153.github.io/billing-support-assistant/)**
-(the page runs fixed rules in place of the AI model; nothing is sent or charged).
-
-Built by [Duckky153](https://github.com/Duckky153) with Claude Code and Codex, on sample data only.
+(runs in your browser with the built-in rule-based model).
 
 ## Results
 

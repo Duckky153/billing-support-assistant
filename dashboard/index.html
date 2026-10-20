@@ -4,247 +4,417 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light only">
-  <title>Billing Support Assistant — gated AI support decisions</title>
-  <meta name="description" content="An interactive support workflow with grounding and policy gates between model output and action.">
+  <title>Billing Support Assistant</title>
+  <meta name="description" content="A billing support assistant where the AI suggests refunds and cancellations and fixed rules decide what happens.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy: #0d2047; --blue: #2357d9; --blue-soft: #edf3ff;
-      --green: #08745b; --green-soft: #e8f8f2;
-      --amber: #9a5b00; --amber-soft: #fff6df;
-      --ink: #10213f; --muted: #68758a; --line: #dce3ed;
-      --canvas: #f5f7fb; --card: #fff;
+      --ink: #0f172a; --ink-2: #334155; --muted: #64748b; --faint: #94a3b8;
+      --line: #e2e8f0; --line-2: #cbd5e1; --bg: #f8fafc; --card: #ffffff;
+      --accent: #4338ca; --accent-2: #4f46e5; --accent-soft: #eef2ff; --accent-line: #c7d2fe;
+      --green: #047857; --green-soft: #ecfdf5; --green-line: #a7f3d0; --green-bar: #10b981;
+      --amber: #b45309; --amber-soft: #fffbeb; --amber-line: #fde68a; --amber-bar: #f59e0b;
+      --red: #b91c1c; --red-soft: #fef2f2; --red-line: #fecaca;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --shadow: 0 1px 2px rgb(15 23 42 / 5%), 0 8px 24px rgb(15 23 42 / 6%);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body { margin: 0; background: var(--canvas); color: var(--ink); }
-    button, textarea, select { font: inherit; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    button, textarea, select { font: inherit; color: inherit; }
     a { color: inherit; }
-    .wrap { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
-    nav { background: var(--navy); color: white; }
-    nav .wrap { min-height: 66px; flex-wrap: wrap; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-    .brand { font-size: 19px; font-weight: 850; letter-spacing: -.02em; }
-    .nav-right { display: flex; align-items: center; gap: 14px; font-size: 13px; }
-    .nav-right a { color: #d9e4fb; text-decoration: none; }
+    code, .code { font-family: var(--mono); font-size: .9em; }
+    .wrap { width: min(1160px, 100% - 48px); margin: 0 auto; }
+    svg { flex: none; }
 
-    .hero { background: var(--navy); color: white; padding: 62px 0 72px; }
-    .hero-grid { max-width: 900px; }
-    .eyebrow { margin: 0 0 10px; color: #56657c; font-size: 11px; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
-    .hero .eyebrow { color: #89a6e9; }
-    h1 { max-width: 800px; margin: 0; font-size: clamp(42px, 6vw, 70px); line-height: 1.02; letter-spacing: -.045em; }
-    .hero-copy { max-width: 720px; margin: 22px 0 0; color: #c0cdeb; font-size: 18px; line-height: 1.6; }
-    .hero-note { max-width: 720px; margin: 12px 0 0; color: #c0cdeb; font-size: 14px; line-height: 1.5; }
-    .primary { display: inline-flex; margin-top: 24px; border: 0; border-radius: 9px; background: #fff; color: var(--navy); font-weight: 800; padding: 11px 15px; text-decoration: none; cursor: pointer; }
+    /* Nav */
+    nav { position: sticky; top: 0; z-index: 10; background: rgb(255 255 255 / 88%); backdrop-filter: saturate(1.6) blur(10px); border-bottom: 1px solid var(--line); }
+    nav .wrap { height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; text-decoration: none; }
+    .mark { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--accent); color: #fff; }
+    .nav-links { display: flex; align-items: center; gap: 22px; font-size: 14px; color: var(--ink-2); }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .gh { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; font-weight: 600; background: #fff; }
 
-    main { padding: 24px 0 54px; }
-    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .metric, .panel { background: var(--card); border: 1px solid var(--line); box-shadow: 0 8px 30px rgb(20 42 82 / 5%); }
-    .metric { border-radius: 12px; padding: 18px; }
-    .metric span, .metric small { display: block; }
-    .metric span { color: var(--muted); font-size: 12px; font-weight: 750; }
-    .metric strong { display: block; margin: 4px 0 2px; font-size: 30px; letter-spacing: -.04em; }
-    .metric small { color: var(--muted); }
-    a.metric { display: block; color: inherit; text-decoration: none; }
-    a.metric:hover { border-color: #a8bff3; }
-    .eval-note { margin: 10px 2px 0; color: var(--muted); font-size: 12px; }
+    /* Hero */
+    .hero { padding: 72px 0 64px; background:
+      radial-gradient(900px 400px at 85% -10%, #e0e7ff 0%, transparent 60%),
+      radial-gradient(700px 360px at -10% 110%, #ecfdf5 0%, transparent 60%), var(--card);
+      border-bottom: 1px solid var(--line); }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 18px; padding: 5px 12px 5px 6px; border: 1px solid var(--accent-line); border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 600; }
+    .pill b { background: var(--accent); color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 11px; letter-spacing: .04em; }
+    h1 { margin: 0; font-size: clamp(38px, 5.2vw, 58px); line-height: 1.05; letter-spacing: -.035em; font-weight: 800; }
+    h1 em { font-style: normal; color: var(--accent-2); }
+    .lede { margin: 20px 0 0; max-width: 560px; color: var(--ink-2); font-size: 18px; line-height: 1.6; }
+    .cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; padding: 11px 18px; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer; border: 1px solid transparent; }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 6px 16px rgb(67 56 202 / 25%); }
+    .btn-primary:hover { background: var(--accent-2); }
+    .btn-ghost { background: #fff; border-color: var(--line-2); color: var(--ink); }
+    .btn-ghost:hover { border-color: var(--faint); }
 
-    .panel { border-radius: 16px; padding: 28px; margin-top: 22px; }
-    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 22px; }
-    h2 { margin: 0; font-size: clamp(25px, 3vw, 34px); letter-spacing: -.035em; }
-    .section-head > p { max-width: 600px; margin: 0; color: var(--muted); line-height: 1.55; }
+    .stats { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 8px; }
+    .stat { display: flex; align-items: center; gap: 16px; padding: 18px 18px; }
+    .stat + .stat { border-top: 1px solid var(--line); }
+    .stat-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; }
+    .stat-icon.blue { background: var(--accent-soft); color: var(--accent); }
+    .stat-icon.green { background: var(--green-soft); color: var(--green); }
+    .stat-icon.amber { background: var(--amber-soft); color: var(--amber); }
+    .stat strong { display: block; font-size: 28px; line-height: 1.1; letter-spacing: -.03em; font-weight: 800; }
+    .stat span { display: block; color: var(--muted); font-size: 14px; }
 
-    .demo-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
-    .input-card, .result-card { border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; }
-    .preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-    .preset { border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 13px; font-weight: 700; }
-    .preset:hover, .preset.active { border-color: #a8bff3; background: var(--blue-soft); color: #123c9b; }
-    label { display: block; margin: 14px 0 7px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
-    select, textarea { width: 100%; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); padding: 11px 12px; }
-    textarea { min-height: 118px; resize: vertical; line-height: 1.5; }
-    select:focus, textarea:focus { outline: 3px solid #dfe8ff; border-color: #8ba8ec; }
-    .run { margin-top: 14px; border: 0; border-radius: 9px; background: var(--blue); color: white; font-weight: 800; padding: 11px 15px; cursor: pointer; }
-    .result-card { background: #fbfcfe; }
-    .result-top { display: flex; justify-content: space-between; align-items: start; gap: 14px; margin-bottom: 16px; }
-    .result-top h3 { margin: 0; font-size: 22px; }
-    .status { border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 850; white-space: nowrap; }
-    .status.safe { background: var(--green-soft); color: var(--green); }
-    .status.review { background: var(--amber-soft); color: var(--amber); }
-    .trace { display: grid; }
-    .trace-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding: 11px 0; border-top: 1px solid var(--line); }
-    .trace-row span:first-child { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; }
-    .trace-row strong { overflow-wrap: anywhere; font-weight: 600; }
-    .code { font-family: var(--mono); font-size: 13px; }
-    .result-note { margin: 15px 0 0; padding: 11px 12px; border-radius: 8px; background: var(--blue-soft); color: #294572; font-size: 13px; line-height: 1.45; }
+    /* Sections */
+    section.block { padding: 72px 0 0; }
+    .head { max-width: 680px; margin-bottom: 28px; }
+    .kicker { margin: 0 0 8px; color: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    h2 { margin: 0; font-size: clamp(28px, 3.4vw, 38px); line-height: 1.15; letter-spacing: -.03em; font-weight: 800; }
+    .head p:not(.kicker) { margin: 12px 0 0; color: var(--muted); font-size: 17px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
 
-    .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-    .step { padding: 17px 14px; border-right: 1px solid var(--line); min-height: 125px; }
-    .step:last-child { border: 0; background: var(--navy); color: white; }
-    .step b { display: block; margin: 8px 0 7px; }
-    .step p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
-    .step:last-child p { color: #b9c8e8; }
-    .step-no { color: #7c8ca5; font: 12px var(--mono); }
+    /* Demo */
+    .demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); overflow: hidden; }
+    .compose { padding: 26px; border-right: 1px solid var(--line); min-width: 0; }
+    .result { padding: 26px; background: #fbfcfe; min-width: 0; }
+    .field-label { display: block; margin: 0 0 8px; color: var(--ink-2); font-size: 13px; font-weight: 600; }
+    .presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 24px; }
+    .preset { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: border-color .15s, background .15s; }
+    .preset b { font-size: 14px; font-weight: 600; }
+    .preset small { color: var(--muted); font-size: 12.5px; }
+    .preset:hover { border-color: var(--line-2); }
+    .preset.active { border-color: var(--accent-2); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent-2) inset; }
+    .preset.active b { color: var(--accent); }
+    select, textarea { width: 100%; border: 1px solid var(--line-2); border-radius: 10px; background: #fff; padding: 10px 12px; font-size: 15px; }
+    select:focus, textarea:focus, .preset:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 1px; border-color: var(--accent-2); }
+    .records { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 22px; }
+    .chip { display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 4px 8px; font-size: 12.5px; color: var(--muted); }
+    .chip code { color: var(--ink); font-weight: 600; font-size: 12px; }
+    .message { border: 1px solid var(--line-2); border-radius: 12px; background: #fff; overflow: hidden; }
+    .message:focus-within { border-color: var(--accent-2); outline: 3px solid var(--accent-line); }
+    .message textarea { border: 0; border-radius: 0; min-height: 110px; resize: vertical; padding: 14px; outline: none; }
+    .message-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 10px 10px 14px; border-top: 1px solid var(--line); background: var(--bg); }
+    .message-bar span { color: var(--muted); font-size: 12.5px; }
+    .run { padding: 9px 16px; font-size: 14px; }
+    .hint { margin: 14px 0 0; color: var(--muted); font-size: 13.5px; }
 
-    .records { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
-    .input-hint { margin: 16px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
-    .results { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .results th, .results td { padding: 10px 14px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
-    .results th:first-child, .results td:first-child { text-align: left; }
-    .results thead th { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; background: #fbfcfe; }
-    .results tbody tr:last-child td { border-bottom: 0; }
-    .results tfoot th, .results tfoot td { border-top: 2px solid var(--line); border-bottom: 0; font-weight: 800; }
-    .findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-    .finding { border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; }
-    .finding b { font-size: 16px; }
-    .finding p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; flex: 1; }
-    .finding a { color: var(--blue); font-size: 13px; font-weight: 800; text-decoration: none; }
-    footer { border-top: 1px solid var(--line); background: var(--card); }
-    .footer-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 22px 0; color: var(--muted); font-size: 13px; }
-    .footer-row a { color: var(--ink); font-weight: 700; }
+    .outcome { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 14px; border: 1px solid var(--line); background: #fff; }
+    .outcome .badge-icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--bg); color: var(--muted); }
+    .outcome h3 { margin: 0; font-size: 19px; letter-spacing: -.01em; }
+    .outcome p { margin: 3px 0 0; color: var(--ink-2); font-size: 14px; }
+    .outcome .status { margin-left: auto; border-radius: 999px; padding: 4px 11px; font-size: 12.5px; font-weight: 700; white-space: nowrap; background: var(--bg); color: var(--muted); }
+    .outcome.ok { background: var(--green-soft); border-color: var(--green-line); }
+    .outcome.ok .badge-icon { background: #d1fae5; color: var(--green); }
+    .outcome.ok .status { background: #d1fae5; color: var(--green); }
+    .outcome.review { background: var(--amber-soft); border-color: var(--amber-line); }
+    .outcome.review .badge-icon { background: #fef3c7; color: var(--amber); }
+    .outcome.review .status { background: #fef3c7; color: var(--amber); }
+    .outcome .icon-ok, .outcome .icon-review, .outcome .icon-idle { display: none; }
+    .outcome.ok .icon-ok, .outcome.review .icon-review, .outcome:not(.ok):not(.review) .icon-idle { display: block; }
 
-    @media (max-width: 900px) {
+    .steps { list-style: none; margin: 22px 0 0; padding: 0; }
+    .steps li { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 14px; padding-bottom: 18px; }
+    .steps li:not(:last-child)::before { content: ""; position: absolute; left: 13.5px; top: 30px; bottom: 2px; width: 1px; background: var(--line-2); }
+    .dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line-2); background: #fff; color: var(--faint); font-size: 12px; font-weight: 700; }
+    .dot svg { display: none; }
+    .steps .pass .dot { background: var(--green-soft); border-color: var(--green-line); color: var(--green); }
+    .steps .fail .dot { background: var(--red-soft); border-color: var(--red-line); color: var(--red); }
+    .steps .pass .dot .i-pass, .steps .fail .dot .i-fail, .steps .info .dot .i-info { display: block; }
+    .steps .pass .dot span, .steps .fail .dot span, .steps .info .dot span { display: none; }
+    .steps .info .dot { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
+    .step-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 3px; }
+    .step-title b { font-size: 14.5px; }
+    .step-title small { color: var(--faint); font-size: 12px; }
+    .step-text { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; overflow-wrap: anywhere; }
+    .skip .step-text { color: var(--faint); }
+
+    .reply { margin-top: 4px; }
+    .reply-label { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--ink-2); font-size: 13px; font-weight: 600; }
+    .bubble { margin: 0; padding: 12px 14px; border-radius: 4px 14px 14px 14px; background: #fff; border: 1px solid var(--line); font-size: 14.5px; color: var(--ink); overflow-wrap: anywhere; }
+    .packet { margin: 16px 0 0; border: 1px dashed var(--amber-line); background: #fff; border-radius: 12px; padding: 14px 16px; }
+    .packet dl { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 14px; margin: 0; font-size: 14px; }
+    .packet dt { color: var(--muted); font-weight: 600; font-size: 13px; }
+    .packet dd { margin: 0; overflow-wrap: anywhere; }
+
+    /* How it works */
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+    .node { position: relative; padding: 20px 18px; min-width: 0; }
+    .node + .node::before { content: ""; position: absolute; left: -12px; top: 50%; width: 12px; height: 1px; background: var(--line-2); }
+    .node-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--bg); color: var(--ink-2); border: 1px solid var(--line); margin-bottom: 14px; }
+    .node b { display: block; font-size: 15px; }
+    .node p { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
+    .node.gate { border-color: var(--accent-line); background: linear-gradient(180deg, var(--accent-soft), #fff 70%); }
+    .node.gate .node-icon { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .gate-tag { position: absolute; top: 16px; right: 14px; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .05em; text-transform: uppercase; }
+    .node.end { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .node.end p { color: #cbd5e1; }
+    .node.end .node-icon { background: #1e293b; border-color: #334155; color: #fff; }
+
+    /* Results */
+    .score { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .score .card { padding: 18px 20px; }
+    .score strong { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+    .score span { color: var(--muted); font-size: 14px; }
+    .score .g strong { color: var(--green); }
+    .score .a strong { color: var(--amber); }
+    .table-card { overflow: hidden; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+    th, td { padding: 12px 18px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    thead th { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; background: var(--bg); }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr:hover { background: #fafbff; }
+    tfoot th, tfoot td { font-weight: 700; border-bottom: 0; background: var(--bg); }
+    .bar { display: flex; height: 8px; width: 100%; min-width: 140px; border-radius: 99px; overflow: hidden; background: var(--line); }
+    .bar i { display: block; height: 100%; }
+    .bar .r { background: var(--green-bar); }
+    .bar .e { background: var(--amber-bar); }
+    .split { display: flex; align-items: center; gap: 12px; }
+    .split small { color: var(--muted); font-size: 12.5px; min-width: 64px; font-variant-numeric: tabular-nums; }
+    .ok-mark { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-weight: 600; }
+    .legend { display: flex; flex-wrap: wrap; gap: 18px; padding: 12px 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+    .attack { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; margin-top: 16px; padding: 20px 22px; background: var(--ink); color: #fff; border-color: var(--ink); }
+    .attack .stat-icon { background: #1e293b; color: #a5b4fc; }
+    .attack b { display: block; font-size: 16px; }
+    .attack p { margin: 3px 0 0; color: #cbd5e1; font-size: 14px; }
+    .attack .big { text-align: right; }
+    .attack .big strong { display: block; font-size: 30px; font-weight: 800; line-height: 1; }
+    .attack .big span { color: #94a3b8; font-size: 12.5px; }
+
+    /* Findings */
+    .findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .finding { padding: 22px; display: flex; flex-direction: column; min-width: 0; }
+    .finding h3 { margin: 0 0 14px; font-size: 17px; letter-spacing: -.01em; }
+    .finding .row { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 10px; font-size: 14px; color: var(--ink-2); }
+    .finding .row + .row { margin-top: 10px; }
+    .tag { align-self: start; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; border-radius: 6px; padding: 2px 0; text-align: center; }
+    .tag.bug { background: var(--red-soft); color: var(--red); }
+    .tag.fix { background: var(--green-soft); color: var(--green); }
+    .finding a { margin-top: auto; padding-top: 16px; display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none; }
+    .finding a:hover { text-decoration: underline; }
+
+    footer { margin-top: 80px; border-top: 1px solid var(--line); background: var(--card); }
+    .foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 22px 0; color: var(--muted); font-size: 14px; }
+    .foot a { color: var(--ink-2); text-decoration: none; font-weight: 600; }
+    .foot a:hover { color: var(--ink); }
+    .foot .brand { color: var(--ink); }
+
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 36px; }
+      .demo { grid-template-columns: 1fr; }
+      .compose { border-right: 0; border-bottom: 1px solid var(--line); }
+      .flow { grid-template-columns: 1fr; gap: 10px; }
+      .node + .node::before { left: 32px; top: -10px; width: 1px; height: 10px; }
+      .node { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 0 14px; align-items: start; }
+      .node-icon { margin: 0; grid-row: span 2; }
+      .score { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .findings { grid-template-columns: 1fr; }
-      .demo-grid { grid-template-columns: 1fr; }
-      .metrics { grid-template-columns: 1fr 1fr; }
-      .pipeline { grid-template-columns: repeat(3, 1fr); }
-      .step:nth-child(3) { border-right: 0; }
-      .step:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
     }
     @media (max-width: 620px) {
-      .wrap { width: min(100% - 28px, 1180px); }
-      .hero { padding: 44px 0 50px; }
-      .hero-copy { font-size: 16px; }
-      main { padding-top: 14px; }
-      .metrics { gap: 8px; }
-      .metric { padding: 14px; }
-      .panel { padding: 18px; }
-      .section-head { align-items: start; flex-direction: column; }
-      .pipeline { grid-template-columns: 1fr 1fr; }
-      .step, .step:nth-child(3) { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-      .step:nth-child(even) { border-right: 0; }
-      .step:nth-child(n+5) { border-bottom: 0; }
-      .trace-row { grid-template-columns: 1fr; gap: 5px; }
+      .wrap { width: min(1160px, 100% - 32px); }
+      .nav-links .hide-sm { display: none; }
+      .hero { padding: 48px 0 44px; }
+      .lede { font-size: 16.5px; }
+      section.block { padding-top: 56px; }
+      .compose, .result { padding: 18px; }
+      .presets { grid-template-columns: 1fr; }
+      .outcome { flex-wrap: wrap; }
+      .outcome .status { margin-left: 52px; }
+      .packet dl { grid-template-columns: 1fr; gap: 2px; }
+      .packet dd + dt { margin-top: 8px; }
+      .attack { grid-template-columns: minmax(0, 1fr); }
+      .attack .stat-icon { display: none; }
+      .attack .big { text-align: left; }
+      .message-bar span { display: none; }
+      .message-bar { justify-content: flex-end; }
     }
   </style>
 </head>
 <body>
   <nav><div class="wrap">
-    <span class="brand">Billing Support Assistant</span>
-    <div class="nav-right"><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/DEMO.md">Walkthrough</a> · <a href="https://github.com/Duckky153/billing-support-assistant">View source</a></div>
+    <a class="brand" href="#">
+      <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span>
+      Billing Support Assistant
+    </a>
+    <div class="nav-links">
+      <a class="hide-sm" href="#try">Demo</a>
+      <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#results">Results</a>
+      <a class="gh" href="https://github.com/Duckky153/billing-support-assistant"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+    </div>
   </div></nav>
 
   <header class="hero"><div class="wrap hero-grid">
     <div>
-      <p class="eyebrow">Gated AI support decisions</p>
-      <h1>AI can propose. Code decides what happens next.</h1>
-      <p class="hero-copy">A support assistant for subscription billing. The AI suggests a reply, refund or cancellation; code checks it against the customer's own records and the billing rules before anything happens. Anything unclear goes to a person with a short review packet.</p>
-      <p class="hero-note">On this page, fixed rules stand in for the AI model. The model path is built but was not run live.</p>
-      <a class="primary" href="#try">Try a ticket</a>
+      <p class="pill"><b>DEMO</b> Billing support with guardrails</p>
+      <h1>The AI suggests.<br><em>The rules decide.</em></h1>
+      <p class="lede">A support assistant for subscription billing. It drafts replies and proposes refunds or cancellations, then fixed rules check every proposal against the customer's records. Anything risky goes to a person.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#try">Try a ticket <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn-ghost" href="#results">See test results</a>
+      </div>
     </div>
+    <aside class="stats" aria-label="Test summary">
+      <div class="stat">
+        <span class="stat-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 9h16M9 13h6"/></svg></span>
+        <div><strong id="metric-total">—</strong><span>test tickets, each with a known right answer</span></div>
+      </div>
+      <div class="stat">
+        <span class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span>
+        <div><strong id="metric-unsafe">—</strong><span>unsafe refunds or cancellations</span></div>
+      </div>
+      <div class="stat">
+        <span class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></span>
+        <div><strong>0 of 256</strong><span>harmful proposals got through when the AI was forced to attack</span></div>
+      </div>
+    </aside>
   </div></header>
 
-  <main><div class="wrap">
-    <section class="metrics" aria-label="Evaluation summary">
-      <a class="metric" href="#results"><span>Test cases</span><strong id="metric-total">—</strong><small>see results by ticket type</small></a>
-      <article class="metric"><span>Automated resolutions</span><strong id="metric-resolved">—</strong><small>handled without review</small></article>
-      <article class="metric"><span>Unsafe approvals</span><strong id="metric-unsafe">—</strong><small>across the test suite</small></article>
-    </section>
-    <p class="eval-note">Results from a controlled 64-ticket evaluation.</p>
-
-    <section class="panel" id="try">
-      <div class="section-head">
-        <div><p class="eyebrow">Interactive workflow</p><h2>Run one support ticket</h2></div>
-        <p>Choose a request or write your own to see the decision and the checks behind it.</p>
+  <main class="wrap">
+    <section class="block" id="try">
+      <div class="head">
+        <p class="kicker">Live demo</p>
+        <h2>Run a ticket through the checks</h2>
+        <p>Pick an example or write your own. This page runs the assistant's built-in rule-based model right in your browser.</p>
       </div>
-      <div class="demo-grid">
-        <div class="input-card">
-          <div class="preset-row" aria-label="Ticket presets">
-            <button class="preset active" type="button" aria-pressed="true" data-preset="trick">Cross-customer trick</button>
-            <button class="preset" type="button" aria-pressed="false" data-preset="refund">Valid refund</button>
-            <button class="preset" type="button" aria-pressed="false" data-preset="limit">Over-limit refund</button>
-            <button class="preset" type="button" aria-pressed="false" data-preset="cancel">Cancel request</button>
-            <button class="preset" type="button" aria-pressed="false" data-preset="negated">"Don't cancel"</button>
-            <button class="preset" type="button" aria-pressed="false" data-preset="question">Account question</button>
+      <div class="card demo">
+        <div class="compose">
+          <span class="field-label">Examples</span>
+          <div class="presets" aria-label="Example tickets">
+            <button class="preset active" type="button" aria-pressed="true" data-preset="trick"><b>Another customer's invoice</b><small>Ada asks to refund Bob's bill</small></button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="refund"><b>Valid refund</b><small>A recent $20 invoice</small></button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="limit"><b>Refund over the limit</b><small>A $500 invoice</small></button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="cancel"><b>Cancel request</b><small>Asked for clearly</small></button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="negated"><b>"Don't cancel"</b><small>Must not cancel the plan</small></button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="question"><b>Account question</b><small>When does my plan renew?</small></button>
           </div>
-          <label for="customer">Customer</label>
+          <label class="field-label" for="customer">Customer</label>
           <select id="customer"></select>
-          <p class="records" id="customer-records"></p>
-          <label for="ticket">Ticket</label>
-          <textarea id="ticket"></textarea>
-          <button class="run" id="run" type="button">Run safety check</button>
-          <p class="input-hint">Try your own wording too, for example "How do I cancel?" or "Refund in_ada1 and give me credit." Wording the rules do not support goes to review.</p>
+          <div class="records" id="customer-records" aria-label="This customer's records"></div>
+          <label class="field-label" for="ticket">Ticket</label>
+          <div class="message">
+            <textarea id="ticket" spellcheck="false"></textarea>
+            <div class="message-bar">
+              <span>Edits clear the last result</span>
+              <button class="btn btn-primary run" id="run" type="button">Check ticket</button>
+            </div>
+          </div>
+          <p class="hint">Try your own wording, like "How do I cancel?" or "Refund in_ada1 and give me credit." Anything the rules don't clearly support goes to a person.</p>
         </div>
-        <div class="result-card">
-          <div class="result-top" aria-live="polite">
-            <div><p class="eyebrow">Decision trace</p><h3 id="result-title">—</h3></div>
+
+        <div class="result">
+          <div class="outcome" id="outcome" aria-live="polite">
+            <span class="badge-icon">
+              <svg class="icon-ok" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>
+              <svg class="icon-review" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+              <svg class="icon-idle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            </span>
+            <div><h3 id="result-title">—</h3><p id="result-summary"></p></div>
             <span class="status" id="result-status">—</span>
           </div>
-          <div class="trace">
-            <div class="trace-row"><span>Proposed action</span><strong id="result-proposed">—</strong></div>
-            <div class="trace-row"><span>Grounding gate</span><strong class="code" id="result-grounding">—</strong></div>
-            <div class="trace-row"><span>Policy gate</span><strong class="code" id="result-policy">—</strong></div>
-            <div class="trace-row"><span>State change approved</span><strong id="result-executed">—</strong></div>
-            <div class="trace-row"><span>Reason</span><strong id="result-reason">—</strong></div>
-            <div class="trace-row"><span>Reply draft</span><strong id="result-reply">—</strong></div>
-            <div class="trace-row"><span>Review packet</span><strong id="result-handoff" style="white-space: pre-line">—</strong></div>
+
+          <ol class="steps">
+            <li id="step-proposal" class="info"><span class="dot"><span>1</span><svg class="i-info" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"/></svg></span>
+              <div><div class="step-title"><b>AI proposal</b><small>what the model suggests</small></div><p class="step-text" id="result-proposed">—</p></div></li>
+            <li id="step-grounding"><span class="dot"><span>2</span><svg class="i-pass" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg><svg class="i-fail" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+              <div><div class="step-title"><b>Record check</b><small class="code" id="result-grounding">—</small></div><p class="step-text" id="result-grounding-text">—</p></div></li>
+            <li id="step-policy"><span class="dot"><span>3</span><svg class="i-pass" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg><svg class="i-fail" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+              <div><div class="step-title"><b>Rule check</b><small class="code" id="result-policy">—</small></div><p class="step-text" id="result-policy-text">—</p></div></li>
+            <li id="step-change"><span class="dot"><span>4</span><svg class="i-info" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <div><div class="step-title"><b>Billing change</b></div><p class="step-text" id="result-executed">—</p></div></li>
+          </ol>
+
+          <div class="reply">
+            <p class="reply-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>Reply drafted for the customer</p>
+            <p class="bubble" id="result-reply">—</p>
           </div>
-          <p class="result-note">Running a check shows the decision and prepares a reply or review packet. It does not change billing or send a message.</p>
+          <div class="packet" id="packet" hidden>
+            <p class="reply-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 2h3v15H5V6h3z"/><path d="M9 12h6M9 16h4"/></svg>Review packet for the person who picks it up</p>
+            <dl id="result-handoff"></dl>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="panel">
-      <div class="section-head">
-        <div><p class="eyebrow">Decision path</p><h2>Six steps, two hard gates</h2></div>
-        <p>The model can suggest an action, but it cannot bypass customer-record checks or policy rules.</p>
+    <section class="block" id="how">
+      <div class="head">
+        <p class="kicker">How it works</p>
+        <h2>Two checks stand between the AI and your billing</h2>
+        <p>The model can suggest anything. Only code decides whether money moves or a plan is cancelled, and it says no unless every rule passes.</p>
       </div>
-      <div class="pipeline" role="list" aria-label="Billing Support Assistant decision pipeline">
-        <article class="step" role="listitem"><span class="step-no">01</span><b>Ticket</b><p>Receive one request tied to one customer.</p></article>
-        <article class="step" role="listitem"><span class="step-no">02</span><b>Retrieve</b><p>Load only that customer's records.</p></article>
-        <article class="step" role="listitem"><span class="step-no">03</span><b>Propose</b><p>The assistant suggests an answer or action.</p></article>
-        <article class="step" role="listitem"><span class="step-no">04 · GATE</span><b>Grounding</b><p>Every cited record must exist and belong to the customer.</p></article>
-        <article class="step" role="listitem"><span class="step-no">05 · GATE</span><b>Policy</b><p>Caps, windows, ownership, and allowed actions live in code.</p></article>
-        <article class="step" role="listitem"><span class="step-no">06</span><b>Resolve or review</b><p>Approve the action or prepare the reason for human review.</p></article>
+      <div class="flow" role="list">
+        <article class="card node" role="listitem"><span class="node-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 7l8 6 8-6"/></svg></span><b>Ticket</b><p>One message from one customer, with only that customer's records loaded.</p></article>
+        <article class="card node" role="listitem"><span class="node-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"/></svg></span><b>AI proposal</b><p>A reply plus an action: answer, refund, cancel, or hand off.</p></article>
+        <article class="card node gate" role="listitem"><span class="gate-tag">Check 1</span><span class="node-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 2h3v15H5V6h3z"/><path d="M9 13l2 2 4-4"/></svg></span><b>Record check</b><p>Every invoice or plan it cites must exist and belong to this customer.</p></article>
+        <article class="card node gate" role="listitem"><span class="gate-tag">Check 2</span><span class="node-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/></svg></span><b>Rule check</b><p>$50 limit, 30-day window, paid invoices only, and the customer must clearly ask.</p></article>
+        <article class="card node end" role="listitem"><span class="node-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span><b>Done, or a person</b><p>Approved actions run and are logged. Everything else goes to a person with a review packet.</p></article>
       </div>
     </section>
 
-    <section class="panel" id="results">
-      <div class="section-head">
-        <div><p class="eyebrow">Test results</p><h2>64 tickets, 0 unsafe changes</h2></div>
-        <p>Each ticket has an expected result, set by reading it against the sample records. Most are built to tempt a wrong refund or cancellation, so the suite is meant to be hard, not typical traffic.</p>
+    <section class="block" id="results">
+      <div class="head">
+        <p class="kicker">Test results</p>
+        <h2>64 test tickets, 0 unsafe changes</h2>
+        <p>Most tickets are built to trick the assistant into a wrong refund or cancellation, so most should go to a person. Every ticket has a known right answer.</p>
       </div>
-      <div class="table-wrap">
-        <table class="results">
-          <thead><tr><th scope="col">Ticket type</th><th scope="col">Tickets</th><th scope="col">Resolved</th><th scope="col">Sent to review</th><th scope="col">Unsafe</th><th scope="col">Matched expected</th></tr></thead>
-          <tbody id="results-body"></tbody>
-          <tfoot><tr id="results-total"></tr></tfoot>
-        </table>
+      <div class="score">
+        <div class="card g"><strong id="metric-resolved">—</strong><span>handled automatically</span></div>
+        <div class="card a"><strong id="metric-escalated">—</strong><span>sent to a person</span></div>
+        <div class="card"><strong id="metric-unsafe-2">—</strong><span>unsafe changes</span></div>
+        <div class="card"><strong id="metric-correct">—</strong><span>matched the right answer</span></div>
       </div>
-      <p class="eval-note">A second run swaps in a stand-in model that always proposes a full, inflated or cross-customer refund, or a cancellation: 256 proposals across the 64 tickets, and none of the harmful ones got through. The 3 that ran were exactly what their tickets asked for (<code>billing-support hostile</code>).</p>
+      <div class="card table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Ticket type</th><th scope="col" class="num">Tickets</th><th scope="col">Handled vs. sent to a person</th><th scope="col" class="num">Unsafe</th><th scope="col">Right answer</th></tr></thead>
+            <tbody id="results-body"></tbody>
+            <tfoot><tr id="results-total"></tr></tfoot>
+          </table>
+        </div>
+        <div class="legend"><span><i style="background: var(--green-bar)"></i>Handled automatically</span><span><i style="background: var(--amber-bar)"></i>Sent to a person</span></div>
+      </div>
+      <div class="card attack">
+        <span class="stat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/></svg></span>
+        <div><b>Forced-attack test</b><p>A second run replaces the AI with one that always proposes harm: a full refund, a 10x refund, a refund on another customer's invoice, or a cancellation. The only 3 that ran were exactly what their tickets asked for.</p></div>
+        <div class="big"><strong>0 / 256</strong><span>harmful proposals executed</span></div>
+      </div>
     </section>
 
-    <section class="panel">
-      <div class="section-head">
-        <div><p class="eyebrow">Found in testing</p><h2>What the checks caught</h2></div>
-        <p>Problems found by reading how the tool really behaved, then fixed and covered by tests.</p>
+    <section class="block">
+      <div class="head">
+        <p class="kicker">Found in testing</p>
+        <h2>What testing caught</h2>
+        <p>Problems found by studying how the tool really behaved, each fixed and locked in with tests.</p>
       </div>
       <div class="findings">
-        <article class="finding"><b>Questions could cancel a plan</b><p>"How do I cancel?" and "don't cancel" could still cancel a sample subscription. Cancellations and refunds now need an explicit request; questions and negations go to review.</p><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/SAFETY.md">Request rules</a></article>
-        <article class="finding"><b>8 answers in the test key were wrong</b><p>Rereading all 64 tickets corrected 44 expected results. 8 had been marked resolved but should have gone to a person, such as a request to talk to a person or a refund wrapped in pressure.</p><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/EVAL-HISTORY.md">Evaluation history</a></article>
-        <article class="finding"><b>A reused ticket ID leaked a receipt</b><p>Sending the same ticket ID for two customers returned one customer's cancellation receipt to the other. Replays are now keyed to the customer, ticket and content.</p><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/THREAT-MODEL.md">Threat model</a></article>
+        <article class="card finding"><h3>Questions could cancel a plan</h3>
+          <div class="row"><span class="tag bug">Bug</span><span>"How do I cancel?" and "don't cancel" could still cancel a subscription.</span></div>
+          <div class="row"><span class="tag fix">Fix</span><span>Refunds and cancellations now need a clear request. Questions and negations go to a person.</span></div>
+          <a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/SAFETY.md">Request rules →</a></article>
+        <article class="card finding"><h3>8 test answers were wrong</h3>
+          <div class="row"><span class="tag bug">Bug</span><span>8 tickets were marked as safe to resolve but should have gone to a person, like a refund wrapped in pressure.</span></div>
+          <div class="row"><span class="tag fix">Fix</span><span>All 64 tickets were reread and 44 expected results corrected.</span></div>
+          <a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/EVAL-HISTORY.md">Evaluation history →</a></article>
+        <article class="card finding"><h3>A reused ticket ID leaked a receipt</h3>
+          <div class="row"><span class="tag bug">Bug</span><span>Sending one ticket ID for two customers showed one customer's cancellation receipt to the other.</span></div>
+          <div class="row"><span class="tag fix">Fix</span><span>Repeat requests are now matched on customer, ticket and content together.</span></div>
+          <a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/THREAT-MODEL.md">Threat model →</a></article>
       </div>
     </section>
+  </main>
 
-  </div></main>
-
-  <footer><div class="wrap footer-row">
-    <span>Built with Claude Code and Codex. Sample data only; no real customers, payments or messages.</span>
-    <span><a href="https://github.com/Duckky153/billing-support-assistant">Source on GitHub</a> · <a href="https://github.com/Duckky153">Duckky153</a></span>
+  <footer><div class="wrap foot">
+    <span class="brand"><span class="mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span>Billing Support Assistant</span>
+    <span><a href="https://github.com/Duckky153/billing-support-assistant">Source on GitHub</a> · <a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/DEMO.md">Walkthrough</a></span>
   </div></footer>
 
   <script src="report-data.js"></script>
-  <script src="billing-support-demo.js?v=6"></script>
+  <script src="billing-support-demo.js?v=7"></script>
   <script>
     const PRESETS = {
       trick: { customer: "cus_ada", ticket: "Please refund invoice in_bob1." },
@@ -260,15 +430,62 @@
       cross_customer: "Another customer's records", obfuscation: "Disguised requests", injection: "Prompt injection",
       adversarial: "Mixed attacks", social_eng: "Social engineering", sensitive: "Chargebacks and legal threats"
     };
-    function friendlyCode(value) {
-      if (!value || value === "n/a") return "Not reached";
-      return value.replaceAll("_", " ");
+    // Plain-language meaning of each check result. Unlisted codes fall back to the engine's own reason.
+    const GROUNDING_TEXT = {
+      ok: "Everything it cites is in this customer's records.",
+      customer_mismatch: "The proposal names a different customer.",
+      cited_invoice_not_found: "That invoice isn't in this customer's records.",
+      cited_invoice_cross_customer: "That invoice belongs to another customer.",
+      cited_subscription_not_found: "That plan isn't in this customer's records.",
+      cited_subscription_cross_customer: "That plan belongs to another customer.",
+      no_evidence: "The proposal gives no evidence.",
+      refund_target_not_cited: "The invoice to refund isn't cited as evidence.",
+      cancel_target_not_cited: "The plan to cancel isn't cited as evidence."
+    };
+    const POLICY_TEXT = {
+      answer_ok: "A plain answer from the records; nothing changes.",
+      refund_ok: "Paid invoice, under the $50 limit, within 30 days, and clearly requested.",
+      cancel_ok: "Active plan on this account, and clearly requested.",
+      sensitive_topic: "A sensitive topic, like a chargeback or legal threat, so a person handles it.",
+      low_confidence: "The assistant isn't sure enough to act.",
+      unknown_action: "No rule allows this action.",
+      unknown_invoice: "That invoice isn't on this account.",
+      cross_customer: "That record is on another customer's account.",
+      invoice_not_refundable: "The invoice hasn't been paid, so it can't be refunded.",
+      refund_exceeds_cap: "The refund is over the $50 automatic limit.",
+      refund_exceeds_remaining: "That's more than is left to refund on this invoice.",
+      refund_outside_window: "The invoice is past the 30-day refund window.",
+      non_positive_amount: "The refund amount isn't valid.",
+      unknown_subscription: "That plan isn't on this account.",
+      subscription_not_active: "The plan isn't active.",
+      mutation_not_authorized: "The customer didn't clearly ask for this exact change."
+    };
+    const PASS_CODES = new Set(["answer_ok", "refund_ok", "cancel_ok"]);
+    const $ = selector => document.querySelector(selector);
+    const sentence = text => text ? text.charAt(0).toUpperCase() + text.slice(1).replace(/\.?$/, ".") : "";
+    const make = (tag, className, text) => {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text !== undefined) el.textContent = String(text);
+      return el;
+    };
+
+    function describeProposal(result) {
+      if (result.action_type === "escalate") return "Hand this to a person.";
+      if (result.action_type === "answer") return "Answer the question from the account records.";
+      return sentence(result.proposed);
+    }
+
+    function setStep(id, state, code, text) {
+      $(`#step-${id}`).className = state;
+      $(`#result-${id}`).textContent = code;
+      $(`#result-${id}-text`).textContent = text;
     }
 
     function applyPreset(name) {
       const preset = PRESETS[name];
-      document.querySelector("#customer").value = preset.customer;
-      document.querySelector("#ticket").value = preset.ticket;
+      $("#customer").value = preset.customer;
+      $("#ticket").value = preset.ticket;
       document.querySelectorAll(".preset").forEach(button => {
         button.classList.toggle("active", button.dataset.preset === name);
         button.setAttribute("aria-pressed", String(button.dataset.preset === name));
@@ -277,28 +494,62 @@
     }
 
     function runTicket() {
-      const result = window.BillingSupportDemo.billingSupportDecide(document.querySelector("#customer").value, document.querySelector("#ticket").value);
+      const result = window.BillingSupportDemo.billingSupportDecide($("#customer").value, $("#ticket").value);
       const resolved = result.outcome === "resolved";
-      const groundingFailed = result.grounding_code && result.grounding_code !== "ok" && result.grounding_code !== "n/a";
-      document.querySelector("#result-title").textContent = resolved ? "Would resolve automatically" : "Needs human review";
-      const status = document.querySelector("#result-status");
-      status.textContent = !resolved ? "Stopped" : result.executed ? "Approved" : "Answered";
-      status.className = `status ${resolved ? "safe" : "review"}`;
-      document.querySelector("#result-proposed").textContent = result.proposed;
-      document.querySelector("#result-grounding").textContent = friendlyCode(result.grounding_code);
-      document.querySelector("#result-policy").textContent = groundingFailed ? "Not applied: grounding failed" : friendlyCode(result.policy_code);
-      document.querySelector("#result-executed").textContent = result.executed ? "Yes" : "No";
-      document.querySelector("#result-reason").textContent = result.reason;
-      document.querySelector("#result-reply").textContent = result.customer_reply;
+      const handedOff = result.action_type === "escalate" || result.grounding_code === "n/a";
+      const groundingPassed = result.grounding_code === "ok";
+      const policyPassed = PASS_CODES.has(result.policy_code);
+      const groundingText = GROUNDING_TEXT[result.grounding_code] || sentence(result.reason);
+      const policyText = POLICY_TEXT[result.policy_code] || sentence(result.reason);
+
+      $("#step-proposal").className = "info";
+      $("#result-proposed").textContent = describeProposal(result);
+      if (handedOff) {
+        setStep("grounding", "skip", "skipped", "Not needed. There is no action to check.");
+        setStep("policy", "skip", "skipped", "Not needed. A person takes it from here.");
+      } else if (!groundingPassed) {
+        setStep("grounding", "fail", result.grounding_code, `Failed. ${groundingText}`);
+        setStep("policy", "skip", "skipped", "Not reached. The record check already stopped it.");
+      } else {
+        setStep("grounding", "pass", result.grounding_code, `Passed. ${groundingText}`);
+        setStep("policy", policyPassed ? "pass" : "fail", result.policy_code, `${policyPassed ? "Passed" : "Stopped"}. ${policyText}`);
+      }
+
+      $("#outcome").className = `outcome ${resolved ? "ok" : "review"}`;
+      $("#result-status").textContent = !resolved ? "Stopped" : result.executed ? "Approved" : "Answered";
+      $("#result-title").textContent = !resolved ? "Sent to a person"
+        : result.action_type === "refund" ? "Refund approved"
+        : result.action_type === "cancel_subscription" ? "Cancellation approved" : "Answered automatically";
+      $("#result-summary").textContent = resolved ? "Both checks passed."
+        : handedOff ? `The assistant handed it off: ${result.reason}.`
+        : !groundingPassed ? groundingText : policyText;
+
+      $("#step-change").className = result.executed ? "pass" : "skip";
+      $("#result-executed").textContent = result.executed
+        ? `Yes. ${sentence(result.proposed)} The live tool runs it and records it in the audit log.`
+        : "No. No money moves and the plan stays as it is.";
+      $("#result-reply").textContent = result.customer_reply;
+
       const packet = result.case_file;
-      document.querySelector("#result-handoff").textContent = packet
-        ? `Reason: ${packet.reason}\nEvidence note: ${packet.evidence}\nUnsent draft for review: ${packet.suggested_resolution}`
-        : "Not needed for this preview.";
+      const list = $("#result-handoff");
+      $("#packet").hidden = !packet;
+      list.replaceChildren();
+      if (packet) {
+        [["Why", sentence(packet.reason)], ["Evidence", sentence(packet.evidence)], ["Draft to review", packet.suggested_resolution]]
+          .forEach(([term, detail]) => list.append(make("dt", "", term), make("dd", "", detail)));
+      }
     }
 
     function showRecords() {
-      const id = document.querySelector("#customer").value;
-      document.querySelector("#customer-records").textContent = `Records: ${window.BillingSupportDemo.describeRecords(id)}`;
+      const box = $("#customer-records");
+      box.replaceChildren();
+      window.BillingSupportDemo.describeRecords($("#customer").value).split(" · ").forEach(item => {
+        const match = item.match(/^(\S+) \((.*)\)$/);
+        const chip = make("span", "chip");
+        if (match) chip.append(make("code", "", match[1]), make("span", "", match[2]));
+        else chip.textContent = item;
+        box.append(chip);
+      });
     }
 
     function invalidateResult() {
@@ -307,40 +558,55 @@
         button.classList.remove("active");
         button.setAttribute("aria-pressed", "false");
       });
-      document.querySelector("#result-title").textContent = "Ticket changed";
-      const status = document.querySelector("#result-status");
-      status.textContent = "Not checked";
-      status.className = "status";
-      ["proposed", "grounding", "policy", "executed", "reason", "reply", "handoff"].forEach(field => {
-        document.querySelector(`#result-${field}`).textContent = "—";
-      });
+      $("#outcome").className = "outcome";
+      $("#result-title").textContent = "Ticket changed";
+      $("#result-summary").textContent = "Press Check ticket to see the decision.";
+      $("#result-status").textContent = "Not checked";
+      $("#step-proposal").className = "";
+      ["grounding", "policy"].forEach(id => setStep(id, "", "", "—"));
+      $("#step-change").className = "";
+      ["proposed", "executed", "reply"].forEach(field => { $(`#result-${field}`).textContent = "—"; });
+      $("#result-handoff").replaceChildren();
+      $("#packet").hidden = true;
     }
 
     function loadReport() {
       const report = window.BILLING_SUPPORT_REPORT;
       const metrics = report.metrics;
-      document.querySelector("#metric-total").textContent = metrics.total;
-      document.querySelector("#metric-resolved").textContent = metrics.total - metrics.escalated;
-      document.querySelector("#metric-unsafe").textContent = metrics.unsafe;
-      const cell = (text, tag = "td") => { const el = document.createElement(tag); el.textContent = text; return el; };
-      const row = (label, m, tag) => {
-        const tr = document.createElement("tr");
-        tr.append(cell(label, tag === "th" ? "th" : "td"), cell(m.total), cell(m.resolved), cell(m.escalated), cell(m.unsafe), cell(`${m.correct} of ${m.total}`));
+      $("#metric-total").textContent = metrics.total;
+      $("#metric-resolved").textContent = metrics.resolved;
+      $("#metric-escalated").textContent = metrics.escalated;
+      $("#metric-unsafe").textContent = metrics.unsafe;
+      $("#metric-unsafe-2").textContent = metrics.unsafe;
+      $("#metric-correct").textContent = `${metrics.correct} of ${metrics.total}`;
+      const row = (label, m, total) => {
+        const tr = make("tr");
+        const bar = make("div", "bar");
+        const resolvedPart = make("i", "r"), escalatedPart = make("i", "e");
+        resolvedPart.style.width = `${(100 * m.resolved) / m.total}%`;
+        escalatedPart.style.width = `${(100 * m.escalated) / m.total}%`;
+        bar.append(resolvedPart, escalatedPart);
+        const split = make("div", "split");
+        split.append(bar, make("small", "", `${m.resolved} · ${m.escalated}`));
+        const splitCell = make("td");
+        splitCell.append(split);
+        const right = make("td");
+        right.append(make("span", "ok-mark", `${m.correct === m.total ? "✓ " : ""}${m.correct} of ${m.total}`));
+        tr.append(make(total ? "th" : "td", "", label), make("td", "num", m.total), splitCell, make("td", "num", m.unsafe), right);
         return tr;
       };
-      const body = document.querySelector("#results-body");
+      const body = $("#results-body");
       Object.entries(report.by_category)
         .sort((a, b) => b[1].total - a[1].total)
         .forEach(([key, m]) => body.append(row(CATEGORY_LABELS[key] || key.replaceAll("_", " "), m)));
-      const total = row("All tickets", metrics, "th");
-      document.querySelector("#results-total").replaceWith(total);
+      $("#results-total").replaceWith(row("All tickets", metrics, true));
     }
 
-    const customer = document.querySelector("#customer");
-    customer.innerHTML = Object.values(window.BillingSupportDemo.CUSTOMERS).map(item => `<option value="${item.id}">${item.name} · ${item.id}</option>`).join("");
+    const customer = $("#customer");
+    customer.innerHTML = Object.values(window.BillingSupportDemo.CUSTOMERS).map(item => `<option value="${item.id}">${item.name} (${item.id})</option>`).join("");
     document.querySelectorAll(".preset").forEach(button => button.addEventListener("click", () => { applyPreset(button.dataset.preset); runTicket(); }));
-    document.querySelector("#run").addEventListener("click", runTicket);
-    document.querySelector("#ticket").addEventListener("input", invalidateResult);
+    $("#run").addEventListener("click", runTicket);
+    $("#ticket").addEventListener("input", invalidateResult);
     customer.addEventListener("change", invalidateResult);
     loadReport();
     applyPreset("trick");
