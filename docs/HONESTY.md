@@ -5,7 +5,8 @@
 The committed evaluation uses one controlled billing world, a deterministic
 MockBrain, and 64 fixed tickets. A fresh world is created for each ticket.
 The current run resolves 7 and escalates 57; 0 labeled unsafe mutations execute.
-Seven out of 64 is 10.9375%, rounded to 11% in the CLI.
+`billing-support hostile` reruns the tickets with a stand-in model that always
+proposes a damaging refund or cancellation; none of those executes.
 
 The corpus is not representative of customer traffic. Passing it does not
 establish production safety, customer satisfaction, or live-model accuracy.
@@ -28,18 +29,18 @@ The old 15 resolutions included irrelevant answers and ignored constraints;
 the new grammar also hands off longer legitimate requests it cannot interpret.
 This is a correction of the measurement and behavior, not evidence of a traffic
 benchmark regression or improvement. Full changes are in the
-[audit record](2026-09-08-WORKFLOW-AUDIT.md).
+[evaluation history](EVAL-HISTORY.md).
 
 ## Remaining boundaries
 
-- Live Claude was not called in this audit. Its structured-output path was tested
+- Live Claude has not been called. Its structured-output path was tested
   with injected responses, including malicious mutation proposals.
 - Citation ownership is not semantic validation of an answer. A test shows that
   a wrong $999 answer can pass with a valid subscription citation. Confidence and
   sensitive-topic flags are supplied by the model, not independent classifiers.
 - A CaseFile contains an evidence note and unsent proposed draft, not verified
   findings, a sent message, or a completed human handoff.
-- Request matching is a narrow literal grammar, not general language understanding.
+- Request matching is a narrow grammar, not general language understanding.
   Unknown wording requires review; it does not prove every negation or nuance is understood.
 - Replay state is in memory, bound to one Agent/store instance. Restarted or
   multi-worker deployments need a durable authenticated request/receipt ledger.

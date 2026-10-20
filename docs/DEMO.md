@@ -5,7 +5,11 @@ Open the [public page](https://duckky153.github.io/billing-support-assistant/) a
 - **Valid refund:** the request matches the sample customer's invoice and allowed refund amount.
 - **Cross-customer trick:** the cited invoice belongs to someone else, so the request is held.
 - **Over-limit refund:** the record exists but the refund exceeds the policy limit.
+- **Cancel request:** an explicit cancellation of the customer's own active plan goes ahead.
+- **"Don't cancel":** a negated request is held, even though it contains the word "cancel".
 - **Account question:** the reply uses the account's recorded renewal details.
+
+The line under the customer picker lists that customer's sample invoices and subscriptions, so you can write your own tickets against them.
 
 If a request is held, read the review packet. It preserves the reason and proposed action for a person to assess. Changing the customer or ticket clears the earlier decision. Run the check again to review the new input.
 
@@ -74,7 +78,7 @@ python scripts/build_dashboard_data.py
 python -m http.server 8768 --bind 127.0.0.1 --directory dashboard
 ```
 
-Open the local page. Try all four presets. The question shows the actual reply;
+Open the local page. Try all six presets. The question shows the actual reply;
 a denial shows a review packet. Edit a previously approved ticket: the old result
 must clear to Not checked. Run a negated cancellation: it must require review.
 

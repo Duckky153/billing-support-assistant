@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Independent leak-gate scanner for the Billing Support Assistant public repository.
+"""Secret and private-term scanner for tracked files.
 
-Billing Support Assistant is a standalone, public project. It must never contain
-the author's personal data or any cross-contamination
-from private sibling projects. This scanner runs in CI and as a pre-push hook;
-it exits non-zero (failing the build / blocking the push) if anything banned
-appears in a tracked file.
+Runs in CI and as a pre-push hook, and exits non-zero if a tracked file contains
+an API key, a private-key header, or a term from an optional local list.
 
 Design goals:
   * Deny-by-default for a curated set of distinctive banned terms.
@@ -28,8 +25,8 @@ from pathlib import Path
 
 
 # --- Banned terms -----------------------------------------------------------
-# Distinctive identifiers tied to the author or to private sibling projects are
-# kept out of this public file. They are read from a private, untracked list:
+# Optional extra terms are read from a local, untracked list so the list itself is
+# never published:
 # $LEAKGATE_TERMS_FILE, or ~/.config/leakgate/terms.txt (one term per line;
 # "#" starts a comment). Without that file only the generic secret patterns
 # below run. Terms are matched case-insensitively on word boundaries.

@@ -21,12 +21,6 @@ coverage.xml
 *.key
 *.pem
 
-# Dashboard
-dashboard/node_modules/
-dashboard/.next/
-dashboard/out/
-dashboard/.vercel/
-
 # OS
 .DS_Store
 

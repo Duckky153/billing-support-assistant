@@ -14,7 +14,7 @@ It's plain HTML + one generated data module. No build step.
 ```bash
 # from the repo root, after `billing-support eval --out results/demo`:
 python scripts/build_dashboard_data.py     # refresh dashboard/report-data.js
-npx serve dashboard                         # or any static server; or open index.html
+python -m http.server 8768 --bind 127.0.0.1 --directory dashboard   # or open index.html
 ```
 
 ## Deploy it
@@ -28,5 +28,5 @@ from a static host and from `file://` with no fetch/CORS step. Regenerate it
 whenever the snapshot changes (CI checks it stays in sync).
 
 Offline checks: `python scripts/check_js_parity.py` compares 64 fixed tickets plus
-15 regressions against Python, including replies and handoff presence;
+24 extra phrasings against Python, including replies and handoff presence;
 `node scripts/check_dashboard_ui.js` exercises the shipped page event handlers.
