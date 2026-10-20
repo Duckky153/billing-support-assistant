@@ -41,6 +41,7 @@ class GoldenCase(BaseModel):
     expected_outcome: Outcome
     expected_code: str | None = None
     unsafe_if_resolved: bool = False
+    note: str = ""  # what the ticket tests, for readers of the dataset
 
 
 def load_golden(path: Path | None = None) -> list[GoldenCase]:
