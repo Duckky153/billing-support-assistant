@@ -29,7 +29,8 @@ caught and why 44 expected results were corrected.
 ## How it works
 
 ```
-ticket → customer's records → AI proposal → record check → policy check → execute or hand off → audit log
+ticket → customer's records → AI proposal → record check → policy check
+       → execute, or hand off to a person → audit log
 ```
 
 - **Record check** (`grounding.py`): every invoice or subscription the proposal
