@@ -72,12 +72,14 @@
   // Whole-request grammar mirrored from billing_support/authorization.py. Unknown text
   // requires review; this is not a general natural-language consent classifier.
   function normalize(body) { return body.toLowerCase().replaceAll("’", "'").replace(/\s+/g, " ").trim(); }
+  // General context shapes, mirrored from authorization.py.
+  var CHARGE_CONTEXT = /^(?:i think )?(?:i was|i got|i've been|i have been|we were|we got) (?:charged|billed) (?:twice|two times|double)(?: (?:this|last) (?:week|month)| today| yesterday)?(?:[.,] | and )|^(?:i was|we were|i got) double[- ]charged(?:[.,] | and )/;
+  var LEAVING_REASON = /[,.] (?:i|we) (?:don't|do not|no longer) (?:need|use|want) (?:it|this|the plan)(?: anymore| any more)?[.!]*$/;
   function mutationRequest(body) {
-    var text = normalize(body).replace(/^(?:hi|hey)[, —-]+/, "").trim()
-      .replace(/[.!?]*\s*(?:thank you|thanks)[.!]*$/, "").trim()
-      .replace(/^(?:(?:i think i was|i was|i think i got|i got) )?(?:charged|billed) twice(?: this week)?(?:[.,] | and )/, "")
-      .replace(/^i was double charged, /, "")
-      .replace(/, i don't need it anymore[.!]*$/, "")
+    var text = normalize(body).replace(/^(?:hi|hello|hey)(?: there)?[, —-]+/, "").trim()
+      .replace(/[.!?]*\s*(?:thank you|thanks)(?: so much)?[.!]*$/, "").trim()
+      .replace(CHARGE_CONTEXT, "")
+      .replace(LEAVING_REASON, "")
       .replace(/[.!?]+$/, "").trim();
     var cancel = text.match(/^(?:please |can you (?:please )?|could you (?:please )?)?cancel (?:my (?:subscription|plan)|(?:subscription )?(sub_[a-z0-9_]+))(?: effective today| immediately| now)?(?: please)?$/);
     if (cancel) return {kind: "cancel_subscription", target_id: cancel[1] || null, amount_cents: null};
@@ -85,7 +87,7 @@
     if (refund) return {kind: "refund", target_id: refund[1] || refund[3] || null, amount_cents: refund[2] ? cents(refund[2]) : null};
     var detailed = text.match(/^(?:please )?refund my recent \$(\d+(?:\.\d{1,2})?) charge on invoice (in_[a-z0-9_]+) \((\d+) cents\)$/);
     if (detailed && cents(detailed[1]) === Number(detailed[3])) return {kind: "refund", target_id: detailed[2], amount_cents: cents(detailed[1])};
-    if (/^(?:i )?(?:would like|want) my money back(?: for the extra charge)?$/.test(text)) return {kind: "refund", target_id: null, amount_cents: null};
+    if (/^(?:i )?(?:would like|want|need) (?:my money back|a refund)(?: for (?:the|this|that) (?:extra|duplicate|double) charge)?$/.test(text)) return {kind: "refund", target_id: null, amount_cents: null};
     return null;
   }
   function cents(text) { var parts = text.split("."); return Number(parts[0]) * 100 + Number((parts[1] || "").padEnd(2, "0")); }
@@ -172,8 +174,9 @@
 
   function doAnswer(customer, subs, invoices, sensitive, body) {
     var text = normalize(body).replace(/[?.!]+$/, "")
-      .replace(/^quick question\s*[—:-]\s*/, "")
-      .replace(/^thanks for sorting out the upgrade so quickly! by the way, /, "");
+      .replace(/^(?:quick question|one question|question)\s*[—:-]\s*/, "")
+      .replace(/^thanks?\b[^.!?]*[.!] /, "")
+      .replace(/^(?:by the way|also|btw),? /, "");
     var renewal = /^(?:when|what day) does my (?:plan|subscription) renew(?:,? and what will i be charged)?$/.test(text);
     var status = /^do i (?:currently )?have an active subscription$/.test(text);
     var invoiceQuestion = /^what (?:was|is) the (?:total )?amount (?:on|of) my latest invoice$/.test(text);
@@ -345,7 +348,16 @@
     return "escalate to a human";
   }
 
-  var API = { billingSupportDecide: billingSupportDecide, CUSTOMERS: CUSTOMERS };
+  // Plain-language list of a customer's sample records, for the page.
+  function describeRecords(cid) {
+    var subs = subsFor(cid).map(function (s) { return s.id + " (" + s.plan + ", " + s.status + ")"; });
+    var invs = invoicesFor(cid).map(function (i) {
+      return i.id + " (" + dollars(i.amount_cents) + ", " + i.status + ", " + i.age_days + " days old)";
+    });
+    return subs.concat(invs.length ? invs : ["no invoices"]).join(" · ");
+  }
+
+  var API = { billingSupportDecide: billingSupportDecide, CUSTOMERS: CUSTOMERS, describeRecords: describeRecords };
   if (typeof window !== "undefined") window.BillingSupportDemo = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })();

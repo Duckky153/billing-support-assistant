@@ -23,14 +23,14 @@
     a { color: inherit; }
     .wrap { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
     nav { background: var(--navy); color: white; }
-    nav .wrap { height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    nav .wrap { min-height: 66px; flex-wrap: wrap; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
     .brand { font-size: 19px; font-weight: 850; letter-spacing: -.02em; }
     .nav-right { display: flex; align-items: center; gap: 14px; font-size: 13px; }
     .nav-right a { color: #d9e4fb; text-decoration: none; }
 
     .hero { background: var(--navy); color: white; padding: 62px 0 72px; }
     .hero-grid { max-width: 900px; }
-    .eyebrow { margin: 0 0 10px; color: #6d7d94; font-size: 11px; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+    .eyebrow { margin: 0 0 10px; color: #56657c; font-size: 11px; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
     .hero .eyebrow { color: #89a6e9; }
     h1 { max-width: 800px; margin: 0; font-size: clamp(42px, 6vw, 70px); line-height: 1.02; letter-spacing: -.045em; }
     .hero-copy { max-width: 720px; margin: 22px 0 0; color: #c0cdeb; font-size: 18px; line-height: 1.6; }
@@ -44,7 +44,9 @@
     .metric span, .metric small { display: block; }
     .metric span { color: var(--muted); font-size: 12px; font-weight: 750; }
     .metric strong { display: block; margin: 4px 0 2px; font-size: 30px; letter-spacing: -.04em; }
-    .metric small { color: #8a96a8; }
+    .metric small { color: var(--muted); }
+    a.metric { display: block; color: inherit; text-decoration: none; }
+    a.metric:hover { border-color: #a8bff3; }
     .eval-note { margin: 10px 2px 0; color: var(--muted); font-size: 12px; }
 
     .panel { border-radius: 16px; padding: 28px; margin-top: 22px; }
@@ -71,7 +73,7 @@
     .trace { display: grid; }
     .trace-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding: 11px 0; border-top: 1px solid var(--line); }
     .trace-row span:first-child { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; }
-    .trace-row strong { overflow-wrap: anywhere; }
+    .trace-row strong { overflow-wrap: anywhere; font-weight: 600; }
     .code { font-family: var(--mono); font-size: 13px; }
     .result-note { margin: 15px 0 0; padding: 11px 12px; border-radius: 8px; background: var(--blue-soft); color: #294572; font-size: 13px; line-height: 1.45; }
 
@@ -83,7 +85,26 @@
     .step:last-child p { color: #b9c8e8; }
     .step-no { color: #7c8ca5; font: 12px var(--mono); }
 
+    .records { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+    .input-hint { margin: 16px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+    .results { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .results th, .results td { padding: 10px 14px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .results th:first-child, .results td:first-child { text-align: left; }
+    .results thead th { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; background: #fbfcfe; }
+    .results tbody tr:last-child td { border-bottom: 0; }
+    .results tfoot th, .results tfoot td { border-top: 2px solid var(--line); border-bottom: 0; font-weight: 800; }
+    .findings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .finding { border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+    .finding b { font-size: 16px; }
+    .finding p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; flex: 1; }
+    .finding a { color: var(--blue); font-size: 13px; font-weight: 800; text-decoration: none; }
+    footer { border-top: 1px solid var(--line); background: var(--card); }
+    .footer-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 22px 0; color: var(--muted); font-size: 13px; }
+    .footer-row a { color: var(--ink); font-weight: 700; }
+
     @media (max-width: 900px) {
+      .findings { grid-template-columns: 1fr; }
       .demo-grid { grid-template-columns: 1fr; }
       .metrics { grid-template-columns: 1fr 1fr; }
       .pipeline { grid-template-columns: repeat(3, 1fr); }
@@ -110,14 +131,14 @@
 <body>
   <nav><div class="wrap">
     <span class="brand">Billing Support Assistant</span>
-    <div class="nav-right"><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/DEMO.md">How to use Billing Support Assistant</a> · <a href="https://github.com/Duckky153/billing-support-assistant">View source</a></div>
+    <div class="nav-right"><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/DEMO.md">Walkthrough</a> · <a href="https://github.com/Duckky153/billing-support-assistant">View source</a></div>
   </div></nav>
 
   <header class="hero"><div class="wrap hero-grid">
     <div>
       <p class="eyebrow">Gated AI support decisions</p>
       <h1>AI can propose. Code decides what happens next.</h1>
-      <p class="hero-copy">Billing Support Assistant separates model output from execution. Record checks and policy rules control which proposals can proceed. Unsupported requests produce a packet for human review.</p>
+      <p class="hero-copy">A support assistant for subscription billing. The AI suggests a reply, refund or cancellation; code checks it against the customer's own records and the billing rules before anything happens. Anything unclear goes to a person with a short review packet.</p>
       <p class="hero-note">On this page, fixed rules stand in for the AI model. The model path is built but was not run live.</p>
       <a class="primary" href="#try">Try a ticket</a>
     </div>
@@ -125,7 +146,7 @@
 
   <main><div class="wrap">
     <section class="metrics" aria-label="Evaluation summary">
-      <article class="metric"><span>Test cases</span><strong id="metric-total">—</strong><small>evaluation scenarios</small></article>
+      <a class="metric" href="#results"><span>Test cases</span><strong id="metric-total">—</strong><small>see results by ticket type</small></a>
       <article class="metric"><span>Automated resolutions</span><strong id="metric-resolved">—</strong><small>handled without review</small></article>
       <article class="metric"><span>Unsafe approvals</span><strong id="metric-unsafe">—</strong><small>across the test suite</small></article>
     </section>
@@ -139,19 +160,23 @@
       <div class="demo-grid">
         <div class="input-card">
           <div class="preset-row" aria-label="Ticket presets">
-            <button class="preset active" type="button" data-preset="trick">Cross-customer trick</button>
-            <button class="preset" type="button" data-preset="refund">Valid refund</button>
-            <button class="preset" type="button" data-preset="limit">Over-limit refund</button>
-            <button class="preset" type="button" data-preset="question">Account question</button>
+            <button class="preset active" type="button" aria-pressed="true" data-preset="trick">Cross-customer trick</button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="refund">Valid refund</button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="limit">Over-limit refund</button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="cancel">Cancel request</button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="negated">"Don't cancel"</button>
+            <button class="preset" type="button" aria-pressed="false" data-preset="question">Account question</button>
           </div>
           <label for="customer">Customer</label>
           <select id="customer"></select>
+          <p class="records" id="customer-records"></p>
           <label for="ticket">Ticket</label>
           <textarea id="ticket"></textarea>
           <button class="run" id="run" type="button">Run safety check</button>
+          <p class="input-hint">Try your own wording too, for example "How do I cancel?" or "Refund in_ada1 and give me credit." Wording the rules do not support goes to review.</p>
         </div>
-        <div class="result-card" aria-live="polite">
-          <div class="result-top">
+        <div class="result-card">
+          <div class="result-top" aria-live="polite">
             <div><p class="eyebrow">Decision trace</p><h3 id="result-title">—</h3></div>
             <span class="status" id="result-status">—</span>
           </div>
@@ -184,16 +209,56 @@
       </div>
     </section>
 
+    <section class="panel" id="results">
+      <div class="section-head">
+        <div><p class="eyebrow">Test results</p><h2>64 tickets, 0 unsafe changes</h2></div>
+        <p>Each ticket has an expected result, set by reading it against the sample records. Most are built to tempt a wrong refund or cancellation, so the suite is meant to be hard, not typical traffic.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="results">
+          <thead><tr><th scope="col">Ticket type</th><th scope="col">Tickets</th><th scope="col">Resolved</th><th scope="col">Sent to review</th><th scope="col">Unsafe</th><th scope="col">Matched expected</th></tr></thead>
+          <tbody id="results-body"></tbody>
+          <tfoot><tr id="results-total"></tr></tfoot>
+        </table>
+      </div>
+      <p class="eval-note">A second run swaps in a stand-in model that always proposes a full, inflated or cross-customer refund, or a cancellation: 256 proposals across the 64 tickets, and none of the harmful ones got through. The 3 that ran were exactly what their tickets asked for (<code>billing-support hostile</code>).</p>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div><p class="eyebrow">Found in testing</p><h2>What the checks caught</h2></div>
+        <p>Problems found by reading how the tool really behaved, then fixed and covered by tests.</p>
+      </div>
+      <div class="findings">
+        <article class="finding"><b>Questions could cancel a plan</b><p>"How do I cancel?" and "don't cancel" could still cancel a sample subscription. Cancellations and refunds now need an explicit request; questions and negations go to review.</p><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/SAFETY.md">Request rules</a></article>
+        <article class="finding"><b>8 answers in the test key were wrong</b><p>Rereading all 64 tickets corrected 44 expected results. 8 had been marked resolved but should have gone to a person, such as a request to talk to a person or a refund wrapped in pressure.</p><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/EVAL-HISTORY.md">Evaluation history</a></article>
+        <article class="finding"><b>A reused ticket ID leaked a receipt</b><p>Sending the same ticket ID for two customers returned one customer's cancellation receipt to the other. Replays are now keyed to the customer, ticket and content.</p><a href="https://github.com/Duckky153/billing-support-assistant/blob/main/docs/THREAT-MODEL.md">Threat model</a></article>
+      </div>
+    </section>
+
   </div></main>
 
+  <footer><div class="wrap footer-row">
+    <span>Built with Claude Code and Codex. Sample data only; no real customers, payments or messages.</span>
+    <span><a href="https://github.com/Duckky153/billing-support-assistant">Source on GitHub</a> · <a href="https://github.com/Duckky153">Duckky153</a></span>
+  </div></footer>
+
   <script src="report-data.js"></script>
-  <script src="billing-support-demo.js?v=5"></script>
+  <script src="billing-support-demo.js?v=6"></script>
   <script>
     const PRESETS = {
       trick: { customer: "cus_ada", ticket: "Please refund invoice in_bob1." },
       refund: { customer: "cus_ada", ticket: "Please refund invoice in_ada1." },
       limit: { customer: "cus_bob", ticket: "Please refund invoice in_bob1." },
+      cancel: { customer: "cus_ada", ticket: "Please cancel my subscription." },
+      negated: { customer: "cus_ada", ticket: "Please don't cancel my plan." },
       question: { customer: "cus_ada", ticket: "When does my plan renew?" }
+    };
+    const CATEGORY_LABELS = {
+      legit: "Everyday requests", question: "Account questions", refund: "Refunds", cancel: "Cancellations",
+      amount: "Refund limits", window_status: "Refund window and plan status", edge: "Missing or unclear details",
+      cross_customer: "Another customer's records", obfuscation: "Disguised requests", injection: "Prompt injection",
+      adversarial: "Mixed attacks", social_eng: "Social engineering", sensitive: "Chargebacks and legal threats"
     };
     function friendlyCode(value) {
       if (!value || value === "n/a") return "Not reached";
@@ -204,7 +269,11 @@
       const preset = PRESETS[name];
       document.querySelector("#customer").value = preset.customer;
       document.querySelector("#ticket").value = preset.ticket;
-      document.querySelectorAll(".preset").forEach(button => button.classList.toggle("active", button.dataset.preset === name));
+      document.querySelectorAll(".preset").forEach(button => {
+        button.classList.toggle("active", button.dataset.preset === name);
+        button.setAttribute("aria-pressed", String(button.dataset.preset === name));
+      });
+      showRecords();
     }
 
     function runTicket() {
@@ -213,7 +282,7 @@
       const groundingFailed = result.grounding_code && result.grounding_code !== "ok" && result.grounding_code !== "n/a";
       document.querySelector("#result-title").textContent = resolved ? "Would resolve automatically" : "Needs human review";
       const status = document.querySelector("#result-status");
-      status.textContent = resolved ? "Approved" : "Stopped";
+      status.textContent = !resolved ? "Stopped" : result.executed ? "Approved" : "Answered";
       status.className = `status ${resolved ? "safe" : "review"}`;
       document.querySelector("#result-proposed").textContent = result.proposed;
       document.querySelector("#result-grounding").textContent = friendlyCode(result.grounding_code);
@@ -227,8 +296,17 @@
         : "Not needed for this preview.";
     }
 
+    function showRecords() {
+      const id = document.querySelector("#customer").value;
+      document.querySelector("#customer-records").textContent = `Records: ${window.BillingSupportDemo.describeRecords(id)}`;
+    }
+
     function invalidateResult() {
-      document.querySelectorAll(".preset").forEach(button => button.classList.remove("active"));
+      showRecords();
+      document.querySelectorAll(".preset").forEach(button => {
+        button.classList.remove("active");
+        button.setAttribute("aria-pressed", "false");
+      });
       document.querySelector("#result-title").textContent = "Ticket changed";
       const status = document.querySelector("#result-status");
       status.textContent = "Not checked";
@@ -244,6 +322,18 @@
       document.querySelector("#metric-total").textContent = metrics.total;
       document.querySelector("#metric-resolved").textContent = metrics.total - metrics.escalated;
       document.querySelector("#metric-unsafe").textContent = metrics.unsafe;
+      const cell = (text, tag = "td") => { const el = document.createElement(tag); el.textContent = text; return el; };
+      const row = (label, m, tag) => {
+        const tr = document.createElement("tr");
+        tr.append(cell(label, tag === "th" ? "th" : "td"), cell(m.total), cell(m.resolved), cell(m.escalated), cell(m.unsafe), cell(`${m.correct} of ${m.total}`));
+        return tr;
+      };
+      const body = document.querySelector("#results-body");
+      Object.entries(report.by_category)
+        .sort((a, b) => b[1].total - a[1].total)
+        .forEach(([key, m]) => body.append(row(CATEGORY_LABELS[key] || key.replaceAll("_", " "), m)));
+      const total = row("All tickets", metrics, "th");
+      document.querySelector("#results-total").replaceWith(total);
     }
 
     const customer = document.querySelector("#customer");
