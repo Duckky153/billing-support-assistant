@@ -20,18 +20,27 @@ def normalize(body: str) -> str:
     return re.sub(r"\s+", " ", body.lower().replace("\u2019", "'")).strip()
 
 
+# A request may carry one short piece of context before or after it. These are
+# general shapes (a duplicate-charge report, a reason for leaving), not ticket text:
+# tests/test_authorization.py checks phrasings that do not appear in the eval suite.
+_CHARGE_CONTEXT = re.compile(
+    r"^(?:i think )?(?:i was|i got|i've been|i have been|we were|we got) "
+    r"(?:charged|billed) (?:twice|two times|double)"
+    r"(?: (?:this|last) (?:week|month)| today| yesterday)?(?:[.,] | and )"
+    r"|^(?:i was|we were|i got) double[- ]charged(?:[.,] | and )"
+)
+_LEAVING_REASON = re.compile(
+    r"[,.] (?:i|we) (?:don't|do not|no longer) (?:need|use|want) (?:it|this|the plan)"
+    r"(?: anymore| any more)?[.!]*$"
+)
+
+
 def request_text(body: str) -> str:
     text = normalize(body)
-    text = re.sub(r"^(?:hi|hey)[, —-]+", "", text).strip()
-    text = re.sub(r"[.!?]*\s*(?:thank you|thanks)[.!]*$", "", text).strip()
-    text = re.sub(
-        r"^(?:(?:i think i was|i was|i think i got|i got) )?(?:charged|billed) twice"
-        r"(?: this week)?(?:[.,] | and )",
-        "",
-        text,
-    )
-    text = re.sub(r"^i was double charged, ", "", text)
-    text = re.sub(r", i don't need it anymore[.!]*$", "", text)
+    text = re.sub(r"^(?:hi|hello|hey)(?: there)?[, —-]+", "", text).strip()
+    text = re.sub(r"[.!?]*\s*(?:thank you|thanks)(?: so much)?[.!]*$", "", text).strip()
+    text = _CHARGE_CONTEXT.sub("", text)
+    text = _LEAVING_REASON.sub("", text)
     return text.rstrip(".!?").strip()
 
 
@@ -63,6 +72,8 @@ def mutation_request(body: str) -> MutationRequest | None:
     if refund:
         amount = int(Decimal(refund.group(2)) * 100) if refund.group(2) else None
         return MutationRequest("refund", refund.group(1) or refund.group(3), amount)
+    # A refund that states its amount twice (dollars and cents) is accepted only
+    # when the two agree.
     detailed_refund = re.fullmatch(
         r"(?:please )?refund my recent \$(\d+(?:\.\d{1,2})?) charge on invoice "
         r"(in_[a-z0-9_]+) \((\d+) cents\)",
@@ -72,7 +83,11 @@ def mutation_request(body: str) -> MutationRequest | None:
         amount = int(Decimal(detailed_refund.group(1)) * 100)
         if amount == int(detailed_refund.group(3)):
             return MutationRequest("refund", detailed_refund.group(2), amount)
-    if re.fullmatch(r"(?:i )?(?:would like|want) my money back(?: for the extra charge)?", text):
+    if re.fullmatch(
+        r"(?:i )?(?:would like|want|need) (?:my money back|a refund)"
+        r"(?: for (?:the|this|that) (?:extra|duplicate|double) charge)?",
+        text,
+    ):
         return MutationRequest("refund")
     return None
 

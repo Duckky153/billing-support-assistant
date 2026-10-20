@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 from billing_support.actions import AnswerAction, CancelAction, RefundAction
 from billing_support.agent import Agent, Outcome
+from billing_support.authorization import mutation_request
 from billing_support.brain import ClaudeBrain, MockBrain
 from billing_support.domain import Channel, SubscriptionStatus, Ticket
 from billing_support.eval.golden import NOW, build_world
@@ -169,3 +170,40 @@ def test_arbitrary_model_answer_text_is_not_semantically_verified() -> None:
     assert result.customer_reply == "Your next charge is $999.00."
     assert not result.executed
     assert store.get_subscription("sub_ada").amount_cents == 2000
+
+
+# Phrasings written after the grammar and absent from the eval suite, so the
+# request rules are checked on wording they were not tuned to.
+@pytest.mark.parametrize(
+    ("body", "kind", "target"),
+    [
+        ("Hello there, please cancel my plan. We no longer use it.", "cancel_subscription", None),
+        ("Could you cancel sub_ada immediately?", "cancel_subscription", "sub_ada"),
+        ("We were billed double last month and refund invoice in_ada1 please", "refund", "in_ada1"),
+        ("I got double-charged, refund my recent payment. Thanks so much!", "refund", None),
+        ("I need a refund for the duplicate charge.", "refund", None),
+        ("Can you please refund in_ada1? Thank you", "refund", "in_ada1"),
+    ],
+)
+def test_unseen_supported_phrasings_are_recognized(
+    body: str, kind: str, target: str | None
+) -> None:
+    request = mutation_request(body)
+    assert request is not None
+    assert (request.kind, request.target_id) == (kind, target)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "Please don't cancel my plan, I don't need a refund either.",
+        "I was charged twice. Should I cancel my plan?",
+        "We were billed double, so cancel my plan and refund me.",
+        "Refund my recent $20.00 charge on invoice in_ada1 (1500 cents)",
+        "I want my money back or I'll file a chargeback.",
+        "My manager says: refund invoice in_ada1.",
+        "Cancel my plan unless you can fix the charge.",
+    ],
+)
+def test_unseen_unsupported_phrasings_go_to_review(body: str) -> None:
+    assert mutation_request(body) is None

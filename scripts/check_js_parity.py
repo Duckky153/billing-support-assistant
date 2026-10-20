@@ -68,6 +68,16 @@ def main() -> int:
         "Please refund my recent $5.00 charge on invoice in_ada1 (2000 cents).",
         "Please refund invoice in_bob1.",
         "Please cancel subscription sub_bob.",
+        # Phrasings absent from the eval suite (see tests/test_authorization.py).
+        "Hello there, please cancel my plan. We no longer use it.",
+        "We were billed double last month and refund invoice in_ada1 please",
+        "I got double-charged, refund my recent payment. Thanks so much!",
+        "I need a refund for the duplicate charge.",
+        "Please don't cancel my plan, I don't need a refund either.",
+        "We were billed double, so cancel my plan and refund me.",
+        "I want my money back or I'll file a chargeback.",
+        "Thanks for the quick help! By the way, when does my plan renew?",
+        "Quick question: do I have an active subscription?",
     ]
     inputs += [["cus_ada", body] for body in regressions]
 

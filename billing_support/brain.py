@@ -189,8 +189,11 @@ class MockBrain:
         body: str,
     ) -> AgentProposal:
         text = normalize(body).rstrip("?.!")
-        text = re.sub(r"^quick question\s*[—:-]\s*", "", text)
-        text = re.sub(r"^thanks for sorting out the upgrade so quickly! by the way, ", "", text)
+        # Drop a short lead-in before the question ("Quick question:", a thank-you
+        # sentence, "by the way"); the question itself must still match exactly.
+        text = re.sub(r"^(?:quick question|one question|question)\s*[—:-]\s*", "", text)
+        text = re.sub(r"^thanks?\b[^.!?]*[.!] ", "", text)
+        text = re.sub(r"^(?:by the way|also|btw),? ", "", text)
         renewal = re.fullmatch(
             r"(?:when|what day) does my (?:plan|subscription) renew"
             r"(?:,? and what will i be charged)?",
