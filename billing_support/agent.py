@@ -38,6 +38,9 @@ _ESCALATION_REPLY = (
 )
 
 
+_REPLAY_CONFLICT = "request ID reused with different content; use a new ID after review"
+
+
 class Outcome(StrEnum):
     RESOLVED = "resolved"  # handled end-to-end, no human needed
     ESCALATED = "escalated"  # routed to a human
@@ -114,7 +117,7 @@ class Agent:
                     return previous[1].model_copy(deep=True)
                 proposal = default_escalation_proposal(
                     ticket.customer_id,
-                    "request ID reused with different content; use a new ID after review",
+                    _REPLAY_CONFLICT,
                 )
                 return self._finish_escalated(
                     ticket,
@@ -128,7 +131,7 @@ class Agent:
                         reason="conflicting replay",
                     ),
                     "request_id_conflict",
-                    "request ID reused with different content; use a new ID after review",
+                    _REPLAY_CONFLICT,
                     self._clock(),
                     None,
                 )

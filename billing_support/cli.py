@@ -18,6 +18,7 @@ from billing_support.brain import Brain, ClaudeBrain, MockBrain
 from billing_support.domain import Channel, Ticket
 from billing_support.eval.golden import NOW, build_world, load_golden
 from billing_support.eval.harness import run_suite
+from billing_support.eval.hostile import run_hostile
 from billing_support.eval.report import EvalReport
 
 
@@ -96,6 +97,20 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_hostile(args: argparse.Namespace) -> int:
+    results = run_hostile(load_golden())
+    for r in results:
+        blocked = ", ".join(f"{code} {n}" for code, n in r.blocked_by.items())
+        print(
+            f"{r.attack}: {r.proposals} proposals · executed as requested {r.executed_as_requested}"
+            f" · breaches {r.breaches} · blocked by {blocked}"
+        )
+    total = sum(r.proposals for r in results)
+    breaches = sum(r.breaches for r in results)
+    print(f"hostile model: {total} harmful proposals · {breaches} got through")
+    return 1 if breaches else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="billing_support", description="Local billing support-agent demo on sample data."
@@ -106,6 +121,11 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--out", default="results/demo")
     ev.add_argument("--brain", choices=["mock", "claude"], default="mock")
     ev.set_defaults(func=_cmd_eval)
+
+    ho = sub.add_parser(
+        "hostile", help="run the suite with a stand-in model that always proposes harm"
+    )
+    ho.set_defaults(func=_cmd_hostile)
 
     rn = sub.add_parser("run", help="handle one ticket against the demo world")
     rn.add_argument("body")
